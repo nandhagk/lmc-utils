@@ -15,10 +15,43 @@ export const enum TokenType {
 
 export class Token {
   constructor(public type: TokenType, public lexeme: string) {}
-}
 
-const EOF_TOKEN = new Token(TokenType.EOF, "\0");
-const CIRCUMPUNCT_TOKEN = new Token(TokenType.Circumpunct, ".");
+  static EOF() {
+    return new Token(TokenType.EOF, "\0");
+  }
+
+  static LeftParen() {
+    return new Token(TokenType.LeftParen, "(");
+  }
+
+  static RightParen() {
+    return new Token(TokenType.RightParen, ")");
+  }
+
+  static QuestionMark() {
+    return new Token(TokenType.QuestionMark, "?");
+  }
+
+  static Asterisk() {
+    return new Token(TokenType.Asterisk, "*");
+  }
+
+  static Pipe() {
+    return new Token(TokenType.Pipe, "|");
+  }
+
+  static Plus() {
+    return new Token(TokenType.Plus, "+");
+  }
+
+  static Circumpunct() {
+    return new Token(TokenType.Circumpunct, ".");
+  }
+
+  static Alphabet(sym: string) {
+    return new Token(TokenType.Alphabet, sym);
+  }
+}
 
 export class Tokenizer {
   constructor(private text: string) {}
@@ -26,38 +59,40 @@ export class Tokenizer {
   public tokenize() {
     const tokens = this.text
       .split("")
-      .filter((char) => ALLOWED.test(char))
-      .map((char) => {
-        switch (char) {
+      .filter((sym) => ALLOWED.test(sym))
+      .map((sym) => {
+        switch (sym) {
           case "(":
-            return new Token(TokenType.LeftParen, char);
+            return Token.LeftParen();
           case ")":
-            return new Token(TokenType.RightParen, char);
+            return Token.RightParen();
           case "*":
-            return new Token(TokenType.Asterisk, char);
+            return Token.Asterisk();
           case "+":
-            return new Token(TokenType.Plus, char);
+            return Token.Plus();
           case "|":
-            return new Token(TokenType.Pipe, char);
+            return Token.Pipe();
           case "?":
-            return new Token(TokenType.QuestionMark, char);
+            return Token.QuestionMark();
           default:
-            return new Token(TokenType.Alphabet, char);
+            return Token.Alphabet(sym);
         }
       });
 
-    if (tokens.length === 0) return [EOF_TOKEN];
+    if (tokens.length === 0) return [Token.EOF()];
 
-    const processedTokens: Token[] = [tokens[0]];
+    const processedTokens: Token[] = [Token.LeftParen(), tokens[0]];
     for (let i = 1; i < tokens.length; ++i) {
       const prv = tokens[i - 1].type;
       const cur = tokens[i].type;
 
-      if (this.isConcatL(prv) && this.isConcatR(cur)) processedTokens.push(CIRCUMPUNCT_TOKEN);
+      if (this.isConcatL(prv) && this.isConcatR(cur)) processedTokens.push(Token.Circumpunct());
       processedTokens.push(tokens[i]);
     }
 
-    processedTokens.push(EOF_TOKEN);
+    processedTokens.push(Token.RightParen());
+    processedTokens.push(Token.EOF());
+
     return processedTokens;
   }
 
