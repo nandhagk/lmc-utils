@@ -5,7 +5,9 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { DFA } from "@/automaton/dfa";
+import { GNFA } from "@/automaton/gnfa";
 import { NFA } from "@/automaton/nfa";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -43,14 +45,15 @@ export function InputForm({ className, ...props }: React.ComponentProps<"div">) 
     const n1 = NFA.fromRegularExpression(A, regex1);
     const n2 = NFA.fromRegularExpression(A, regex2);
 
+    console.log(GNFA.fromDFA(DFA.fromNFA(n1)).toRegularExpression());
+    console.log(GNFA.fromDFA(DFA.fromNFA(n2)).toRegularExpression());
+
     const d1 = DFA.fromNFA(NFA.difference(n1, n2));
     const d2 = DFA.fromNFA(NFA.difference(n2, n1));
 
     setM1(d1.findMatch());
     setM2(d2.findMatch());
     setEQ(d1.F.size === 0 && d2.F.size == 0);
-
-    console.log({ d1, d2, m1, m2 });
   }
 
   return (
