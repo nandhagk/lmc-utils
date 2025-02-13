@@ -121,6 +121,8 @@ export class NFA {
 		const tokenizer = new Tokenizer(text);
 		const tokens = tokenizer.tokenize();
 
+		if (tokens.length === 1) return this.null(A) // Empty string
+
 		const parser = new Parser(tokens);
 		const AST = parser.parse();
 

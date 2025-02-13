@@ -265,7 +265,7 @@ export class Parser {
 
 	private check(type: TokenType) {
 		if (this.isAtEnd()) return false;
-		return this.peek().type == type;
+		return this.peek().type === type;
 	}
 
 	private advance() {
@@ -274,7 +274,7 @@ export class Parser {
 	}
 
 	private isAtEnd() {
-		return this.peek().type == TokenType.EOF;
+		return this.peek().type === TokenType.EOF;
 	}
 
 	private peek() {

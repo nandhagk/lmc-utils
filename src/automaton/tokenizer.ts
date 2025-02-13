@@ -1,5 +1,5 @@
 export const EPSILON = 'ε';
-export const ALLOWED = /([a-z]|[0-9]|\||\*|\+|\?|\(|\))/;
+export const ALLOWED = /([a-z]|[0-9]|[A-Z]|\||\*|\+|\?|\(|\))/;
 
 export const enum TokenType {
 	LeftParen,
@@ -46,18 +46,20 @@ export class Tokenizer {
 				}
 			});
 
+		if (tokens.length === 0) return [new Token(TokenType.EOF, '\0')]
+
 		const processedTokens: Token[] = [tokens[0]];
 		for (let i = 1; i < tokens.length; ++i) {
 			const prv = tokens[i - 1].type;
 			const cur = tokens[i].type;
 
 			if (
-				(prv == TokenType.Alphabet ||
-					prv == TokenType.RightParen ||
-					prv == TokenType.Asterisk ||
-					prv == TokenType.QuestionMark ||
-					prv == TokenType.Plus) &&
-				(cur == TokenType.Alphabet || cur == TokenType.LeftParen)
+				(prv === TokenType.Alphabet ||
+					prv === TokenType.RightParen ||
+					prv === TokenType.Asterisk ||
+					prv === TokenType.QuestionMark ||
+					prv === TokenType.Plus) &&
+				(cur === TokenType.Alphabet || cur === TokenType.LeftParen)
 			)
 				processedTokens.push(new Token(TokenType.Circumpunct, '.'));
 

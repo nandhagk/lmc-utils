@@ -6,7 +6,11 @@ import { InputForm } from "./Form";
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <InputForm />
+      <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
+        <div className="w-100 max-w-sm md:max-w-3xl">
+          <InputForm />
+        </div>
+      </div>
       <Toaster />
     </ThemeProvider>
   );
