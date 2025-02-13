@@ -13,6 +13,16 @@ export class NFA {
 
 	private static id = 0;
 
+	static null(A: Set<string>) {
+		const S = this.id++;
+
+		const F = new Set<number>();
+		const Q = new Set([S]);
+
+		const D = new Map();
+		return new NFA(Q, A, S, D, F);
+	}
+
 	static literal(A: Set<string>, sym: string) {
 		const S = this.id++;
 		const E = this.id++;

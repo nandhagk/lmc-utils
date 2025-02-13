@@ -1,8 +1,9 @@
-import { NFA } from './nfa.js';
-import { EPSILON, Token, TokenType } from './tokenizer.js';
+import { NFA } from "./nfa.js";
+import { EPSILON, Token, TokenType } from "./tokenizer.js";
 
 abstract class Expression {
 	abstract visitNFA(A: Set<string>, visitor: NFAVisitor): NFA;
+	abstract visitPrinter(printer: ASTPrinter): string;
 }
 
 export class NFAVisitor {
@@ -18,8 +19,50 @@ export class NFAVisitor {
 		return NFA.union(left.visitNFA(A, this), right.visitNFA(A, this));
 	}
 
+	public visitOption(A: Set<string>, expr: Expression) {
+		return NFA.union(expr.visitNFA(A, this), EPSILON_EXPRESSION.visitNFA(A, this));
+	}
+
 	public visitStar(A: Set<string>, expr: Expression) {
 		return NFA.star(expr.visitNFA(A, this));
+	}
+
+	public visitPlus(A: Set<string>, expr: Expression) {
+		return NFA.concatenate(expr.visitNFA(A, this), NFA.star(expr.visitNFA(A, this)));
+	}
+
+	public visitGrouping(A: Set<string>, expr: Expression) {
+		return expr.visitNFA(A, this);
+	}
+}
+
+export class ASTPrinter {
+	public visitLiteral(sym: string) {
+		return sym;
+	}
+
+	public visitConcatenate(left: Expression, right: Expression) {
+		return left.visitPrinter(this) + right.visitPrinter(this);
+	}
+
+	public visitUnion(left: Expression, right: Expression) {
+		return left.visitPrinter(this) + "|" + right.visitPrinter(this);
+	}
+
+	public visitOption(expr: Expression) {
+		return expr.visitPrinter(this) + "?";
+	}
+
+	public visitStar(expr: Expression) {
+		return expr.visitPrinter(this) + "*";
+	}
+
+	public visitPlus(expr: Expression) {
+		return expr.visitPrinter(this) + "+";
+	}
+
+	public visitGrouping(expr: Expression) {
+		return "(" + expr.visitPrinter(this) + ")";
 	}
 }
 
@@ -31,31 +74,53 @@ class LiteralExpression extends Expression {
 	public visitNFA(A: Set<string>, visitor: NFAVisitor) {
 		return visitor.visitLiteral(A, this.literal.lexeme);
 	}
+
+	public visitPrinter(printer: ASTPrinter): string {
+		return printer.visitLiteral(this.literal.lexeme);
+	}
 }
 
+const EPSILON_EXPRESSION = new LiteralExpression(new Token(TokenType.Alphabet, EPSILON));
+
 class ConcatenateExpression extends Expression {
-	constructor(
-		public left: Expression,
-		public right: Expression
-	) {
+	constructor(public left: Expression, public right: Expression) {
 		super();
 	}
 
 	public visitNFA(A: Set<string>, visitor: NFAVisitor) {
 		return visitor.visitConcatenate(A, this.left, this.right);
 	}
+
+	public visitPrinter(printer: ASTPrinter): string {
+		return printer.visitConcatenate(this.left, this.right);
+	}
 }
 
 class UnionExpression extends Expression {
-	constructor(
-		public left: Expression,
-		public right: Expression
-	) {
+	constructor(public left: Expression, public right: Expression) {
 		super();
 	}
 
 	public visitNFA(A: Set<string>, visitor: NFAVisitor) {
 		return visitor.visitUnion(A, this.left, this.right);
+	}
+
+	public visitPrinter(printer: ASTPrinter): string {
+		return printer.visitUnion(this.left, this.right);
+	}
+}
+
+class OptionExpression extends Expression {
+	constructor(public expr: Expression) {
+		super();
+	}
+
+	public visitNFA(A: Set<string>, visitor: NFAVisitor) {
+		return visitor.visitOption(A, this.expr);
+	}
+
+	public visitPrinter(printer: ASTPrinter): string {
+		return printer.visitOption(this.expr);
 	}
 }
 
@@ -67,6 +132,24 @@ class StarExpression extends Expression {
 	public visitNFA(A: Set<string>, visitor: NFAVisitor) {
 		return visitor.visitStar(A, this.expr);
 	}
+
+	public visitPrinter(printer: ASTPrinter): string {
+		return printer.visitStar(this.expr);
+	}
+}
+
+class PlusExpression extends Expression {
+	constructor(public expr: Expression) {
+		super();
+	}
+
+	public visitNFA(A: Set<string>, visitor: NFAVisitor) {
+		return visitor.visitPlus(A, this.expr);
+	}
+
+	public visitPrinter(printer: ASTPrinter): string {
+		return printer.visitPlus(this.expr);
+	}
 }
 
 class GroupingExpression extends Expression {
@@ -75,14 +158,18 @@ class GroupingExpression extends Expression {
 	}
 
 	public visitNFA(A: Set<string>, visitor: NFAVisitor) {
-		return this.expr.visitNFA(A, visitor);
+		return visitor.visitGrouping(A, this.expr);
+	}
+
+	public visitPrinter(printer: ASTPrinter): string {
+		return printer.visitGrouping(this.expr);
 	}
 }
 
 export class Parser {
 	private current = 0;
 
-	constructor(private tokens: Token[]) {}
+	constructor(private tokens: Token[]) { }
 
 	public parse() {
 		return this.expression();
@@ -118,7 +205,7 @@ export class Parser {
 		let expr = this.star();
 
 		if (this.match(TokenType.QuestionMark)) {
-			expr = new UnionExpression(expr, new LiteralExpression(new Token(TokenType.Alphabet, EPSILON)));
+			expr = new OptionExpression(expr);
 		}
 
 		return expr;
@@ -138,7 +225,7 @@ export class Parser {
 		let expr = this.primary();
 
 		if (this.match(TokenType.Plus)) {
-			expr = new ConcatenateExpression(expr, new StarExpression(expr));
+			expr = new PlusExpression(expr);
 		}
 
 		return expr;
@@ -156,7 +243,7 @@ export class Parser {
 			return new GroupingExpression(expr);
 		}
 
-		throw new Error('HOW');
+		throw new Error("HOW");
 	}
 
 	private match(...types: TokenType[]) {
@@ -173,7 +260,7 @@ export class Parser {
 	private consume(type: TokenType) {
 		if (this.check(type)) return this.advance();
 
-		throw new Error('HOW');
+		throw new Error("HOW");
 	}
 
 	private check(type: TokenType) {
