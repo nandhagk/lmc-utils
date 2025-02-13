@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { DFA } from "@/automaton/dfa";
-import { GNFA } from "@/automaton/gnfa";
 import { NFA } from "@/automaton/nfa";
 
 import { Button } from "@/components/ui/button";
@@ -23,7 +22,7 @@ const FormSchema = z.object({
   regex2: z.string(),
 });
 
-export function InputForm({ className, ...props }: React.ComponentProps<"div">) {
+export function RegexEq({ className, ...props }: React.ComponentProps<"div">) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -45,8 +44,8 @@ export function InputForm({ className, ...props }: React.ComponentProps<"div">) 
     const n1 = NFA.fromRegularExpression(A, regex1);
     const n2 = NFA.fromRegularExpression(A, regex2);
 
-    console.log(GNFA.fromDFA(DFA.fromNFA(n1)).toRegularExpression());
-    console.log(GNFA.fromDFA(DFA.fromNFA(n2)).toRegularExpression());
+    // console.log(GNFA.fromDFA(DFA.fromNFA(n1)).toRegularExpression());
+    // console.log(GNFA.fromDFA(DFA.fromNFA(n2)).toRegularExpression());
 
     const d1 = DFA.fromNFA(NFA.difference(n1, n2));
     const d2 = DFA.fromNFA(NFA.difference(n2, n1));
