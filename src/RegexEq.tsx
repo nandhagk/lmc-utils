@@ -9,10 +9,12 @@ import { NFA } from "@/automaton/nfa";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -35,24 +37,33 @@ export function RegexEq({ className, ...props }: React.ComponentProps<"div">) {
   const [eq, setEQ] = useState<boolean>(true);
   const [m1, setM1] = useState<string | null>(null);
   const [m2, setM2] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    setIsOpen(true);
+    setIsLoading(true);
     const { alphabet, regex1, regex2 } = data;
 
     const A = new Set(alphabet.split(","));
 
-    const n1 = NFA.fromRegularExpression(A, regex1);
-    const n2 = NFA.fromRegularExpression(A, regex2);
+    try {
+      const n1 = NFA.fromRegularExpression(A, regex1);
+      const n2 = NFA.fromRegularExpression(A, regex2);
 
-    // console.log(GNFA.fromDFA(DFA.fromNFA(n1)).toRegularExpression());
-    // console.log(GNFA.fromDFA(DFA.fromNFA(n2)).toRegularExpression());
+      const d1 = DFA.fromNFA(NFA.difference(n1, n2));
+      const d2 = DFA.fromNFA(NFA.difference(n2, n1));
 
-    const d1 = DFA.fromNFA(NFA.difference(n1, n2));
-    const d2 = DFA.fromNFA(NFA.difference(n2, n1));
+      setM1(d1.findMatch());
+      setM2(d2.findMatch());
+      setEQ(d1.F.size === 0 && d2.F.size == 0);
+    } catch {
+      setIsOpen(false);
 
-    setM1(d1.findMatch());
-    setM2(d2.findMatch());
-    setEQ(d1.F.size === 0 && d2.F.size == 0);
+      toast({ variant: "destructive", description: "Parse failure!" });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -108,40 +119,47 @@ export function RegexEq({ className, ...props }: React.ComponentProps<"div">) {
                         </FormItem>
                       )}
                     />
+                    <Button type="submit" className="w-full">
+                      Check
+                    </Button>
                   </div>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button type="submit" className="w-full">
-                        Check
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>{eq ? "Equivalent" : "Not Equivalent"}</DialogTitle>
-                      </DialogHeader>
-                      {m1 !== null && (
-                        <div className="flex items-center space-x-2">
-                          <div className="grid flex-1 gap-2">
-                            <Label htmlFor="m1">Matched by 1 but not by 2</Label>
-                            <Input id="m1" defaultValue={m1} readOnly />
-                          </div>
-                        </div>
-                      )}
-                      {m2 !== null && (
-                        <div className="flex items-center space-x-2">
-                          <div className="grid flex-1 gap-2">
-                            <Label htmlFor="m2">Matched by 2 but not by 1</Label>
-                            <Input id="m2" defaultValue={m2} readOnly />
-                          </div>
-                        </div>
-                      )}
-                    </DialogContent>
-                  </Dialog>
                 </div>
               </form>
             </Form>
           </CardContent>
         </Card>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent className="sm:max-w-md">
+            {isLoading ? (
+              <Spinner />
+            ) : (
+              <>
+                <DialogHeader>
+                  <DialogTitle>{eq ? "Equivalent" : "Not Equivalent"}</DialogTitle>
+                </DialogHeader>
+                {m1 !== null && (
+                  <div className="flex items-center space-x-2">
+                    <div className="grid flex-1 gap-2">
+                      <Label htmlFor="m1">Matched by 1 but not by 2</Label>
+                      <Input id="m1" defaultValue={m1} readOnly />
+                    </div>
+                  </div>
+                )}
+                {m2 !== null && (
+                  <div className="flex items-center space-x-2">
+                    <div className="grid flex-1 gap-2">
+                      <Label htmlFor="m2">Matched by 2 but not by 1</Label>
+                      <Input id="m2" defaultValue={m2} readOnly />
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+        <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
+          Made with ❤️ by <a href="https://github.com/nandhagk/lmc-utils">nandhagk</a>
+        </div>
       </div>
     </>
   );

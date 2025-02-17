@@ -74,8 +74,6 @@ export class GNFA {
   }
 
   static fromDFA(d: DFA) {
-    console.log(d);
-
     const A = d.A;
     const R = d.Q;
     const T = d.S;

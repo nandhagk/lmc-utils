@@ -132,6 +132,33 @@ export class NFA {
     return this.union(this.difference(n1, n2), this.difference(n2, n1));
   }
 
+  static reverse(n: NFA) {
+    const m = this.fromDFA(DFA.fromNFA(n));
+
+    const A = m.A;
+    const P = m.Q;
+    const E = m.F;
+    const C = m.D;
+    const R = m.S;
+
+    const D = new Map<number, Map<string, Set<number>>>();
+    for (const r of P) {
+      for (const [sym, [state]] of C.get(r)!.entries()) {
+        if (!D.has(state)) D.set(state, new Map());
+        if (!D.get(state)!.has(sym)) D.get(state)!.set(sym, new Set());
+        D.get(state)!.get(sym)!.add(r);
+      }
+    }
+
+    const S = this.id++;
+    D.set(S, new Map([[EPSILON, E]]));
+
+    const Q = new Set([...P, S]);
+    const F = new Set([R]);
+
+    return new NFA(Q, A, S, D, F);
+  }
+
   static fromRegularExpression(A: Set<string>, text: string) {
     const tokenizer = new Tokenizer(text);
     const tokens = tokenizer.tokenize();
