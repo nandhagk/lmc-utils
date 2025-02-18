@@ -1,3 +1,3 @@
 export function Home() {
-  return <></>;
+  return <div className="h-full bg-[url('./shishu.jpeg')] bg-repeat-round"></div>;
 }
