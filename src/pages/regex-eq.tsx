@@ -40,14 +40,13 @@ export function RegexEq({ className, ...props }: React.ComponentProps<"div">) {
       setIsOpen(false);
       toast({ variant: "destructive", description: "Parse failure!" });
     } else {
+      setIsLoading(false);
       const { d1, d2 } = e.data;
 
       setM1(DFA.findMatch(d1));
       setM2(DFA.findMatch(d2));
       setEQ(d1.F.size === 0 && d2.F.size == 0);
     }
-
-    setIsLoading(false);
   };
 
   const [eq, setEQ] = useState(true);
@@ -135,22 +134,22 @@ export function RegexEq({ className, ...props }: React.ComponentProps<"div">) {
                 <Spinner />
               ) : (
                 <>
-                  {m1 ? (
+                  {m1 !== null && (
                     <div className="flex items-center space-x-2">
                       <div className="grid flex-1 gap-2">
                         <Label htmlFor="m1">Matched by 1 but not by 2</Label>
                         <Input id="m1" defaultValue={m1} readOnly />
                       </div>
                     </div>
-                  ) : null}
-                  {m2 ? (
+                  )}
+                  {m2 !== null && (
                     <div className="flex items-center space-x-2">
                       <div className="grid flex-1 gap-2">
                         <Label htmlFor="m2">Matched by 2 but not by 1</Label>
                         <Input id="m2" defaultValue={m2} readOnly />
                       </div>
                     </div>
-                  ) : null}
+                  )}
                 </>
               )}
             </DialogContent>
