@@ -95,15 +95,19 @@ export class DFA {
     return new DFA(Q, A, S, D, F);
   }
 
-  public findMatch(): string | null {
-    const match = new Map<number, string>([[this.S, ""]]);
+  static findMatch(d: DFA) {
+    const S = d.S;
+    const F = d.F;
+    const D = d.D;
 
-    const stk = [this.S];
+    const match = new Map<number, string>([[S, ""]]);
+
+    const stk = [S];
     while (stk.length > 0) {
       const T = stk.pop()!;
 
       const pref = match.get(T)!;
-      for (const [sym, state] of this.D.get(T)!) {
+      for (const [sym, state] of D.get(T)!) {
         if (match.has(state)) continue;
 
         match.set(state, pref + sym);
@@ -111,7 +115,7 @@ export class DFA {
       }
     }
 
-    for (const f of this.F) if (match.has(f)) return match.get(f)!;
+    for (const f of F) if (match.has(f)) return match.get(f)!;
 
     return null;
   }
