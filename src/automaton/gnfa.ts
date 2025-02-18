@@ -16,7 +16,7 @@ export class GNFA {
 
   public remove(q: number) {
     let self = this.D.get(q)!.get(q) ?? null;
-    if (self !== null) self = "((" + self + ")*)";
+    if (self !== null) self = `(${self})*`;
 
     this.D.get(q)!.delete(q);
     this.E.get(q)!.delete(q);
@@ -60,9 +60,9 @@ export class GNFA {
   }
 
   private union(a: string, b: string) {
-    if (a !== EPSILON && b !== EPSILON) return "((" + a + ")|(" + b + "))";
-    if (a !== EPSILON) return "((" + a + ")?)";
-    if (b !== EPSILON) return "((" + b + ")?)";
+    if (a !== EPSILON && b !== EPSILON) return `((${a})|(${b}))`;
+    if (a !== EPSILON) return `(${a})?`;
+    if (b !== EPSILON) return `(${b})?`;
     return EPSILON;
   }
 

@@ -1,18 +1,21 @@
-import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/toaster";
+import { Layout } from "@/layout";
+import { Home } from "@/pages/home";
+import { NFARegex } from "@/pages/nfa-regex";
+import { RegexEq } from "@/pages/regex-eq";
+import { BrowserRouter, Route, Routes } from "react-router";
 import "./App.css";
-import { RegexEq } from "./RegexEq";
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <div className="flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
-        <div className="w-100 max-w-sm md:max-w-3xl">
-          <RegexEq />
-        </div>
-      </div>
-      <Toaster />
-    </ThemeProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="/regex-eq" element={<RegexEq />} />
+          <Route path="/nfa-regex" element={<NFARegex />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 
