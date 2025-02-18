@@ -9,7 +9,6 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  worker: {
-    format: "es",
-  },
+  worker: { format: "es" },
+  build: { target: "ES2022" },
 });

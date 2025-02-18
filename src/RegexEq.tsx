@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import RegexEqWorker from "@/workers/regex-eq?worker";
 import { useState } from "react";
 
 const FormSchema = z.object({
@@ -32,7 +31,7 @@ export function RegexEq({ className, ...props }: React.ComponentProps<"div">) {
     },
   });
 
-  const worker = new RegexEqWorker();
+  const worker = new Worker(new URL("@/workers/regex-eq.ts", import.meta.url));
 
   worker.onmessage = (e: MessageEvent<{ success: boolean; d1: DFA; d2: DFA }>) => {
     const { success } = e.data;
@@ -42,7 +41,7 @@ export function RegexEq({ className, ...props }: React.ComponentProps<"div">) {
       toast({ variant: "destructive", description: "Parse failure!" });
     } else {
       const { d1, d2 } = e.data;
-      console.log(d1, d2);
+
       setM1(DFA.findMatch(d1));
       setM2(DFA.findMatch(d2));
       setEQ(d1.F.size === 0 && d2.F.size == 0);
