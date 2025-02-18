@@ -1,6 +1,6 @@
-import { DFA } from "./dfa.js";
-import { NFAVisitor, Parser } from "./parser.js";
-import { EPSILON, Tokenizer } from "./tokenizer.js";
+import { DFA } from "@/automaton/dfa";
+import { NFAVisitor, Parser } from "@/automaton/parser";
+import { EPSILON, Tokenizer } from "@/automaton/tokenizer";
 
 export class NFA {
   constructor(

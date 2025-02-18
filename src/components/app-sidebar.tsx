@@ -4,6 +4,7 @@ import * as React from "react";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarHeader,
   SidebarMenu,
@@ -77,6 +78,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        {" "}
+        <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
+          Made with ❤️ by <a href="https://github.com/nandhagk/lmc-utils">nandhagk</a>
+        </div>
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

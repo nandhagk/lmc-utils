@@ -1,5 +1,5 @@
-import { DFA } from "./dfa";
-import { EPSILON } from "./tokenizer";
+import { DFA } from "@/automaton/dfa";
+import { EPSILON } from "@/automaton/tokenizer";
 
 export class GNFA {
   private E = new Map<number, Map<number, string>>();

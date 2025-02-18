@@ -1,5 +1,3 @@
-"use client";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -12,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 import { useState } from "react";
 
 const FormSchema = z.object({
@@ -21,7 +18,7 @@ const FormSchema = z.object({
   regex2: z.string(),
 });
 
-export function RegexEq({ className, ...props }: React.ComponentProps<"div">) {
+export function RegexEq() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -40,12 +37,13 @@ export function RegexEq({ className, ...props }: React.ComponentProps<"div">) {
       setIsOpen(false);
       toast({ variant: "destructive", description: "Parse failure!" });
     } else {
-      setIsLoading(false);
       const { d1, d2 } = e.data;
 
       setM1(DFA.findMatch(d1));
       setM2(DFA.findMatch(d2));
       setEQ(d1.F.size === 0 && d2.F.size == 0);
+
+      setIsLoading(false);
     }
   };
 
@@ -63,99 +61,98 @@ export function RegexEq({ className, ...props }: React.ComponentProps<"div">) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center p-6 md:p-10">
-      <div className="w-100 max-w-sm md:max-w-3xl">
-        <div className={cn("flex flex-col gap-6", className)} {...props}>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 md:p-8">
-              <div className="flex flex-col gap-6">
-                <div className="flex flex-col items-center text-center">
-                  <h1 className="text-2xl font-bold">RegEx Equivalence</h1>
-                  <p className="text-balance text-muted-foreground">Check equivalence of regular expressions</p>
+    <>
+      <div className="flex flex-col items-center justify-center p-6 md:p-10">
+        <div className="w-100 max-w-sm md:max-w-3xl">
+          <div className="flex flex-col gap-6">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 md:p-8">
+                <div className="flex flex-col gap-6">
+                  <div className="flex flex-col items-center text-center">
+                    <h1 className="text-2xl font-bold">RegEx Equivalence</h1>
+                    <p className="text-balance text-muted-foreground">Check equivalence of regular expressions</p>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="alphabet">Alphabet</Label>
+                    <FormField
+                      control={form.control}
+                      name="alphabet"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input id="alphabet" placeholder="Alphabet" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="regex1">Regular Expression 1</Label>
+                    <FormField
+                      control={form.control}
+                      name="regex1"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input id="regex1" placeholder="Regular Expression" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="regex1">Regular Expression 2</Label>
+                    <FormField
+                      control={form.control}
+                      name="regex2"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input id="regex2" placeholder="Regular Expression" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full">
+                    Check
+                  </Button>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="alphabet">Alphabet</Label>
-                  <FormField
-                    control={form.control}
-                    name="alphabet"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input id="alphabet" placeholder="Alphabet" {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="regex1">Regular Expression 1</Label>
-                  <FormField
-                    control={form.control}
-                    name="regex1"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input id="regex1" placeholder="Regular Expression" {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="regex1">Regular Expression 2</Label>
-                  <FormField
-                    control={form.control}
-                    name="regex2"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input id="regex2" placeholder="Regular Expression" {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <Button type="submit" className="w-full">
-                  Check
-                </Button>
-                <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
-                  Made with ❤️ by <a href="https://github.com/nandhagk/lmc-utils">nandhagk</a>
-                </div>
-              </div>
-            </form>
-          </Form>
-
-          <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>{isLoading ? "Processing" : eq ? "Equivalent" : "Not Equivalent"}</DialogTitle>
-              </DialogHeader>
-              {isLoading ? (
-                <Spinner />
-              ) : (
-                <>
-                  {m1 !== null && (
-                    <div className="flex items-center space-x-2">
-                      <div className="grid flex-1 gap-2">
-                        <Label htmlFor="m1">Matched by 1 but not by 2</Label>
-                        <Input id="m1" defaultValue={m1} readOnly />
-                      </div>
-                    </div>
-                  )}
-                  {m2 !== null && (
-                    <div className="flex items-center space-x-2">
-                      <div className="grid flex-1 gap-2">
-                        <Label htmlFor="m2">Matched by 2 but not by 1</Label>
-                        <Input id="m2" defaultValue={m2} readOnly />
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </DialogContent>
-          </Dialog>
+              </form>
+            </Form>
+          </div>
         </div>
       </div>
-    </div>
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{isLoading ? "Processing" : eq ? "Equivalent" : "Not Equivalent"}</DialogTitle>
+          </DialogHeader>
+          {isLoading ? (
+            <Spinner />
+          ) : (
+            <>
+              {m1 !== null && (
+                <div className="flex items-center space-x-2">
+                  <div className="grid flex-1 gap-2">
+                    <Label htmlFor="m1">Matched by 1 but not by 2</Label>
+                    <Input id="m1" defaultValue={m1} readOnly />
+                  </div>
+                </div>
+              )}
+              {m2 !== null && (
+                <div className="flex items-center space-x-2">
+                  <div className="grid flex-1 gap-2">
+                    <Label htmlFor="m2">Matched by 2 but not by 1</Label>
+                    <Input id="m2" defaultValue={m2} readOnly />
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

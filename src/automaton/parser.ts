@@ -1,5 +1,5 @@
-import { NFA } from "./nfa.js";
-import { EPSILON, Token, TokenType } from "./tokenizer.js";
+import { NFA } from "@/automaton/nfa";
+import { EPSILON, Token, TokenType } from "@/automaton/tokenizer";
 
 abstract class Expression {
   abstract visitNFA(A: Set<string>, visitor: NFAVisitor): NFA;

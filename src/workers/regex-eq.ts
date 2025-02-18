@@ -1,10 +1,10 @@
 (async () => {
   const [{ DFA }, { NFA }] = await Promise.all([import("@/automaton/dfa"), import("@/automaton/nfa")]);
 
-  self.onmessage = (e: MessageEvent<{ alphabet: string; regex1: string; regex2: string }>) => {
+  self.onmessage = (e: MessageEvent<{ alphabet: string[]; regex1: string; regex2: string }>) => {
     const { alphabet, regex1, regex2 } = e.data;
 
-    const A = new Set(alphabet.split(","));
+    const A = new Set(alphabet);
 
     try {
       const n1 = NFA.fromRegularExpression(A, regex1);

@@ -1,5 +1,5 @@
-import { NFA } from "./nfa.js";
-import { EPSILON } from "./tokenizer.js";
+import { NFA } from "@/automaton/nfa";
+import { EPSILON } from "@/automaton/tokenizer";
 
 const setToBigInt = (s: Set<number>) => [...s].reduce((acc, cur) => (acc |= 1n << BigInt(cur)), 0n);
 
