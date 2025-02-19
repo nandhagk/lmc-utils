@@ -18,23 +18,16 @@ export function GraphCanvas({ testCases, directed, settings }: Props) {
     const canvas = ref.current!;
     const ctx = canvas.getContext("2d")!;
 
-    const canvasBorderX = canvas.offsetWidth - canvas.clientWidth;
-    const canvasBorderY = canvas.offsetHeight - canvas.clientHeight;
-
     const pixelRatio = window.devicePixelRatio;
-    const rect = canvas.getBoundingClientRect();
 
-    const width = pixelRatio * canvas.clientWidth;
+    const width = Math.max(500, pixelRatio * canvas.clientWidth);
     const height = pixelRatio * canvas.clientHeight;
-
-    console.log(canvas.clientWidth, rect.width - canvasBorderX, width, canvas.clientHeight, rect.height - canvasBorderY, height);
 
     canvas.width = width;
     canvas.height = height;
 
     ctx.scale(pixelRatio, pixelRatio);
-    resizeGraph(canvas.clientWidth, canvas.clientHeight);
-    // resizeGraph(canvas.width / 1000, canvas.height / 1000);
+    resizeGraph(width / pixelRatio, height / pixelRatio);
   };
 
   useEffect(() => {
@@ -48,9 +41,6 @@ export function GraphCanvas({ testCases, directed, settings }: Props) {
 
     resizeCanvas();
     animateGraph(canvas, ctx);
-
-    // window.addEventListener("resize", resizeCanvas);
-    // return () => void window.removeEventListener("resize", resizeCanvas);
   }, []);
 
   useEffect(() => updateGraph(testCases), [testCases]);
@@ -58,8 +48,8 @@ export function GraphCanvas({ testCases, directed, settings }: Props) {
   useEffect(() => updateSettings(settings), [settings]);
 
   return (
-    <div className="xl:h-full flex-1 border-2 border-white rounded-lg">
-      <canvas className="xl:h-full w-full" ref={ref}></canvas>
+    <div className="min-w-[300px] h-96 md:h-full flex-1 border-2 border-white rounded-lg">
+      <canvas className="md:h-full w-full" ref={ref}></canvas>
     </div>
   );
 }

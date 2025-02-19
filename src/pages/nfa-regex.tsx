@@ -126,7 +126,7 @@ export function NFARegex() {
   return (
     <>
       <div className="flex flex-row flex-wrap items-center justify-center p-6 md:p-10">
-        <div className="xl:h-full flex-none max-w-sm md:max-w-3xl">
+        <div className="md:h-full flex-none max-w-sm md:max-w-3xl">
           <div className="flex flex-col gap-6">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 md:p-8">
