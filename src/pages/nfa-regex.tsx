@@ -41,14 +41,23 @@ export function NFARegex() {
     defaultValues: {
       alphabet: "a,b",
       start: "1",
-      accept: "2",
-      nfa: "1 2 a\n2 1 b",
+      accept: "1,3",
+      nfa: "1 2 a,b\n2 2 a\n2 3 b\n3 2 b\n3 1 a",
     },
   });
 
   useEffect(() => {
     setTestCases(
-      new Map([[0, { graphEdges: parseGraphInputEdges("", "1 2 a\n2 1 b", 0).graph!, graphParChild: getDefaultGraph(), inputFormat: "edges" }]])
+      new Map([
+        [
+          0,
+          {
+            graphEdges: parseGraphInputEdges("", "1 2 a,b\n2 2 a\n2 3 b\n3 2 b\n3 1 a", 0).graph!,
+            graphParChild: getDefaultGraph(),
+            inputFormat: "edges",
+          },
+        ],
+      ])
     );
 
     const { unsubscribe } = form.watch((data) => {
@@ -185,7 +194,7 @@ export function NFARegex() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Textarea id="nfa" placeholder="NFA" {...field} />
+                            <Textarea id="nfa" placeholder="NFA" {...field} className="min-h-36" />
                           </FormControl>
                         </FormItem>
                       )}
