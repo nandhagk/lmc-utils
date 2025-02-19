@@ -14,39 +14,28 @@ interface Props {
 export function GraphCanvas({ testCases, directed, settings }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
 
-  const resizeCanvasMain = (): void => {
-    const canvas = ref.current;
-
-    if (canvas === null) {
-      console.log("Error: `canvas` is null!");
-      return;
-    }
-
-    const ctx = canvas.getContext("2d");
-
-    if (ctx === null) {
-      console.log("Error: `ctx` is null!");
-      return;
-    }
+  const resizeCanvas = (): void => {
+    const canvas = ref.current!;
+    const ctx = canvas.getContext("2d")!;
 
     const canvasBorderX = canvas.offsetWidth - canvas.clientWidth;
     const canvasBorderY = canvas.offsetHeight - canvas.clientHeight;
 
-    const pixelRatio = window.devicePixelRatio || 1;
+    const pixelRatio = window.devicePixelRatio;
     const rect = canvas.getBoundingClientRect();
 
-    const width = pixelRatio * rect.width;
-    const height = pixelRatio * rect.height;
+    const width = pixelRatio * canvas.clientWidth;
+    const height = pixelRatio * canvas.clientHeight;
+
+    console.log(canvas.clientWidth, rect.width - canvasBorderX, width, canvas.clientHeight, rect.height - canvasBorderY, height);
 
     canvas.width = width;
     canvas.height = height;
 
     ctx.scale(pixelRatio, pixelRatio);
-
-    resizeGraph(rect.width - canvasBorderX, rect.height - canvasBorderY);
+    resizeGraph(canvas.clientWidth, canvas.clientHeight);
+    // resizeGraph(canvas.width / 1000, canvas.height / 1000);
   };
-
-  const resizeCanvas = (): void => void resizeCanvasMain();
 
   useEffect(() => {
     const font = new FontFace("MonoLisa", 'url("./MonoLisa-Regular.otf")');
@@ -54,25 +43,14 @@ export function GraphCanvas({ testCases, directed, settings }: Props) {
     font.load();
     document.fonts.add(font);
 
-    const canvas = ref.current;
-
-    if (canvas === null) {
-      console.log("Error: canvas is null!");
-      return;
-    }
-
-    const ctxMain = canvas.getContext("2d");
-    if (ctxMain === null) {
-      console.log("Error: canvas context is null!");
-      return;
-    }
+    const canvas = ref.current!;
+    const ctx = canvas.getContext("2d")!;
 
     resizeCanvas();
+    animateGraph(canvas, ctx);
 
-    animateGraph(canvas, ctxMain);
-
-    window.addEventListener("resize", resizeCanvas);
-    return () => void window.removeEventListener("resize", resizeCanvas);
+    // window.addEventListener("resize", resizeCanvas);
+    // return () => void window.removeEventListener("resize", resizeCanvas);
   }, []);
 
   useEffect(() => updateGraph(testCases), [testCases]);
@@ -80,8 +58,8 @@ export function GraphCanvas({ testCases, directed, settings }: Props) {
   useEffect(() => updateSettings(settings), [settings]);
 
   return (
-    <div className="h-full flex-1 border-2 border-white rounded-lg">
-      <canvas className="h-full w-full" ref={ref}></canvas>
+    <div className="xl:h-full flex-1 border-2 border-white rounded-lg">
+      <canvas className="xl:h-full w-full" ref={ref}></canvas>
     </div>
   );
 }
