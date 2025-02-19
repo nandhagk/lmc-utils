@@ -23,14 +23,14 @@ export class GNFA {
 
     for (const [incoming, a] of this.E.get(q)!.entries()) {
       for (const [outgoing, b] of this.D.get(q)!.entries()) {
-        const c = self ? this.concat(this.concat(a, self), b) : this.concat(a, b);
+        const c = self ? GNFA.concat(GNFA.concat(a, self), b) : GNFA.concat(a, b);
 
         if (this.D.get(incoming)!.has(outgoing)) {
           const d = this.D.get(incoming)!.get(outgoing)!;
-          this.D.get(incoming)!.set(outgoing, this.union(c, d));
+          this.D.get(incoming)!.set(outgoing, GNFA.union(c, d));
 
           const e = this.E.get(outgoing)!.get(incoming)!;
-          this.E.get(outgoing)!.set(incoming, this.union(c, e));
+          this.E.get(outgoing)!.set(incoming, GNFA.union(c, e));
         } else {
           this.D.get(incoming)!.set(outgoing, c);
           this.E.get(outgoing)!.set(incoming, c);
@@ -48,10 +48,10 @@ export class GNFA {
 
   public removeAll() {
     const Q = this.Q;
-    Q.delete(this.S);
-    Q.delete(this.U);
-
-    for (const q of Q) this.remove(q);
+    for (const q of Q) {
+      if (q === this.S || q === this.U) continue;
+      this.remove(q);
+    }
   }
 
   public toRegularExpression() {
@@ -59,14 +59,14 @@ export class GNFA {
     return this.D.get(this.S)!.get(this.U) ?? null;
   }
 
-  private union(a: string, b: string) {
+  private static union(a: string, b: string) {
     if (a !== EPSILON && b !== EPSILON) return `((${a})|(${b}))`;
     if (a !== EPSILON) return `(${a})?`;
     if (b !== EPSILON) return `(${b})?`;
     return EPSILON;
   }
 
-  private concat(a: string, b: string) {
+  private static concat(a: string, b: string) {
     if (a !== EPSILON && b !== EPSILON) return a + b;
     if (a !== EPSILON) return a;
     if (b !== EPSILON) return b;
@@ -92,7 +92,11 @@ export class GNFA {
       const H = new Map<number, string>();
       for (const a of A) {
         const r = C.get(q)!.get(a)!;
-        H.set(r, a);
+        if (!H.has(r)) {
+          H.set(r, a);
+        } else {
+          H.set(r, this.union(H.get(r)!, a));
+        }
       }
 
       if (E.has(q)) H.set(U, EPSILON);

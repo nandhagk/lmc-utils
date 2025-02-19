@@ -143,7 +143,7 @@ let settings: Settings = {
   bipartiteMode: false,
   markedNodes: false,
   lockMode: false,
-  fixedMode: false,
+  fixedMode: true,
   multiedgeMode: true,
 };
 
@@ -344,8 +344,6 @@ function buildSettings(): void {
 export function updateGraph(testCases: TestCases) {
   nodesToConceal.clear();
 
-  let isEdgeNumeric = true;
-
   let rawNodes: string[] = [];
   let rawEdges: string[] = [];
 
@@ -379,15 +377,6 @@ export function updateGraph(testCases: TestCases) {
       rawEdgeLabels.set(k, v);
     });
   });
-
-  for (const e of rawEdges) {
-    if (rawEdgeLabels.get(e) === undefined || !isInteger(rawEdgeLabels.get(e)!)) {
-      isEdgeNumeric = false;
-      break;
-    }
-  }
-
-  localStorage.setItem("isEdgeNumeric", isEdgeNumeric.toString());
 
   updateNodes(rawNodes);
   updateEdges(rawEdges);

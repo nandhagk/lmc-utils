@@ -118,7 +118,7 @@ export function NFARegex() {
     bipartiteMode: false,
     lockMode: false,
     markedNodes: false,
-    fixedMode: false,
+    fixedMode: true,
     multiedgeMode: true,
     settingsFormat: "general",
   });

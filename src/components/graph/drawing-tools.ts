@@ -12,20 +12,26 @@ function euclidDist(u: Vector2D, v: Vector2D): number {
 }
 
 export function drawLine(ctx: CanvasRenderingContext2D, u: Vector2D, v: Vector2D, r: number, nodeBorderWidthHalf: number, edgeColor: string) {
-  let px = u.y - v.y;
-  let py = v.x - u.x;
-
-  const toFlip = r % 2 == 0;
-
-  px *= 0.5 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
-  py *= 0.5 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
-
   ctx.lineWidth = 2 * nodeBorderWidthHalf;
   ctx.strokeStyle = edgeColor;
 
   ctx.beginPath();
-  ctx.moveTo(u.x, u.y);
-  ctx.bezierCurveTo(u.x + px, u.y + py, v.x + px, v.y + py, v.x, v.y);
+
+  if (u.x == v.x && u.y === v.y) {
+    ctx.arc(u.x, u.y - 20, 20, 0, 2 * Math.PI);
+  } else {
+    let px = u.y - v.y;
+    let py = v.x - u.x;
+
+    const toFlip = r % 2 == 0;
+
+    px *= 0.5 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
+    py *= 0.5 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
+
+    ctx.beginPath();
+    ctx.moveTo(u.x, u.y);
+    ctx.bezierCurveTo(u.x + px, u.y + py, v.x + px, v.y + py, v.x, v.y);
+  }
 
   ctx.stroke();
 }
@@ -55,8 +61,8 @@ export function drawArrow(
   ctx.strokeStyle = edgeColor;
   ctx.fillStyle = edgeColor;
 
-  const mx = (u.x + v.x) / 2 + px;
-  const my = (u.y + v.y) / 2 + py;
+  const mx = u.x === v.x && u.y === v.y ? u.x : (u.x + v.x) / 2 + px;
+  const my = u.x === v.x && u.y === v.y ? u.y - 40 : (u.y + v.y) / 2 + py;
 
   ctx.beginPath();
 
@@ -110,7 +116,11 @@ export function drawEdgeLabel(
   ctx.font = `${settings.fontSize}px JB`;
   ctx.fillStyle = edgeLabelColor;
 
-  ctx.fillText(label, mx + px, my + py);
+  if (u.x === v.x && u.y === v.y) {
+    ctx.fillText(label, u.x, u.y - 60);
+  } else {
+    ctx.fillText(label, mx + px, my + py);
+  }
 }
 
 export function drawCircle(

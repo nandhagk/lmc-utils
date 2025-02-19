@@ -184,7 +184,6 @@ export function parseGraphInputEdges(roots: string, input: string, testCaseNumbe
 
   const nodes = new Array<string>();
   const adj = new Map<string, string[]>();
-  const rev = new Map<string, string[]>();
   const edgeToPos = new Map<string, number>();
   const edges = new Array<string>();
   const edgeLabels = new Map<string, string>();
@@ -210,59 +209,41 @@ export function parseGraphInputEdges(roots: string, input: string, testCaseNumbe
     } else if (e.length <= 3) {
       const pu = padNode(e[0], testCaseNumber, "edges");
       const pv = padNode(e[1], testCaseNumber, "edges");
-      if (pu === pv && !nodes.includes(pu)) {
+
+      if (!nodes.includes(pu)) {
         nodes.push(pu);
-        adj.set(pu, []);
+        adj.set(pu, [pv]);
+      } else if (!adj.get(pu)!.includes(pv)) {
+        adj.set(pu, [...adj.get(pu)!, pv]);
+      }
+
+      if (!nodes.includes(pv)) {
+        nodes.push(pv);
+        adj.set(pv, []);
+      }
+
+      let edgeBase = "";
+
+      if (pu <= pv) {
+        edgeBase = [pu, pv].join(" ");
       } else {
-        if (!nodes.includes(pu)) {
-          nodes.push(pu);
-          adj.set(pu, [pv]);
-        } else if (!adj.get(pu)!.includes(pv)) {
-          adj.set(pu, [...adj.get(pu)!, pv]);
-        }
+        edgeBase = [pv, pu].join(" ");
+      }
 
-        if (!nodes.includes(pv)) {
-          nodes.push(pv);
-          adj.set(pv, []);
-        }
+      if (edgeToPos.get(edgeBase) === undefined) {
+        edgeToPos.set(edgeBase, 0);
+      } else {
+        edgeToPos.set(edgeBase, edgeToPos.get(edgeBase)! + 1);
+      }
 
-        let edgeBase = "";
-
-        if (pu <= pv) {
-          edgeBase = [pu, pv].join(" ");
-        } else {
-          edgeBase = [pv, pu].join(" ");
-        }
-
-        if (edgeToPos.get(edgeBase) === undefined) {
-          edgeToPos.set(edgeBase, 0);
-        } else {
-          edgeToPos.set(edgeBase, edgeToPos.get(edgeBase)! + 1);
-        }
-
-        edges.push([pu, pv, edgeToPos.get(edgeBase)].join(" "));
-
-        if (e.length === 3) {
-          edgeLabels.set([pu, pv, edgeToPos.get(edgeBase)].join(" "), e[2]);
-        }
+      edges.push([pu, pv, edgeToPos.get(edgeBase)].join(" "));
+      if (e.length === 3) {
+        edgeLabels.set([pu, pv, edgeToPos.get(edgeBase)].join(" "), e[2]);
       }
     } else {
       return {
         status: "BAD",
       };
-    }
-  }
-
-  for (const [u, vs] of adj.entries()) {
-    if (!rev.has(u)) {
-      rev.set(u, []);
-    }
-    for (const v of vs) {
-      if (rev.has(v)) {
-        rev.set(v, [...rev.get(v)!, u]);
-      } else {
-        rev.set(v, [u]);
-      }
     }
   }
 

@@ -11,7 +11,7 @@ export class NFA {
     public F: Set<number>
   ) {}
 
-  private static id = 0;
+  public static id = 0;
 
   static null(A: Set<string>) {
     const S = this.id++;
