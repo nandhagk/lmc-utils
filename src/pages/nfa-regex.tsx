@@ -9,14 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-import { EPSILON } from "@/automaton/tokenizer";
-import { GraphCanvas } from "@/components/graph/graph-canvas";
-import { parseGraphInputEdges } from "@/components/graph/parse-graph-input";
-import { Settings, TestCase, TestCases } from "@/components/graph/types";
-import { getDefaultGraph } from "@/components/graph/utils";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/hooks/use-toast";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const FormSchema = z.object({
   alphabet: z.string(),
@@ -26,16 +21,6 @@ const FormSchema = z.object({
 });
 
 export function NFARegex() {
-  const [testCases, setTestCases] = useState<TestCases>(() => {
-    const init = new Map<number, TestCase>();
-    init.set(0, {
-      graphEdges: getDefaultGraph(),
-      graphParChild: getDefaultGraph(),
-      inputFormat: "edges",
-    });
-    return init;
-  });
-
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -45,38 +30,6 @@ export function NFARegex() {
       nfa: "1 2 a,b\n2 2 a\n2 3 b\n3 2 b\n3 1 a",
     },
   });
-
-  useEffect(() => {
-    setTestCases(
-      new Map([
-        [
-          0,
-          {
-            graphEdges: parseGraphInputEdges("", "1 2 a,b\n2 2 a\n2 3 b\n3 2 b\n3 1 a", 0).graph!,
-            graphParChild: getDefaultGraph(),
-            inputFormat: "edges",
-          },
-        ],
-      ])
-    );
-
-    const { unsubscribe } = form.watch((data) => {
-      setTestCases(
-        new Map([
-          [
-            0,
-            {
-              graphEdges: parseGraphInputEdges("", data.nfa!.replaceAll("~", EPSILON), 0).graph!,
-              graphParChild: getDefaultGraph(),
-              inputFormat: "edges",
-            },
-          ],
-        ])
-      );
-    });
-
-    return () => unsubscribe();
-  }, []);
 
   const worker = new Worker(new URL("@/workers/nfa-regex.ts", import.meta.url));
 
@@ -104,33 +57,6 @@ export function NFARegex() {
 
     worker.postMessage(data);
   }
-
-  const [directed] = useState<boolean>(true);
-
-  const [settings] = useState<Settings>({
-    language: "en",
-    drawMode: "node",
-    expandedCanvas: false,
-    markBorder: "double",
-    markColor: 1,
-    labelOffset: 0,
-    darkMode: true,
-    nodeRadius: 25,
-    fontSize: 20,
-    nodeBorderWidthHalf: 1,
-    edgeLength: 100,
-    edgeLabelSeparation: 20,
-    showComponents: false,
-    showBridges: false,
-    showMSTs: false,
-    treeMode: false,
-    bipartiteMode: false,
-    lockMode: false,
-    markedNodes: false,
-    fixedMode: true,
-    multiedgeMode: true,
-    settingsFormat: "general",
-  });
 
   return (
     <>
@@ -209,7 +135,6 @@ export function NFARegex() {
             </Form>
           </div>
         </div>
-        <GraphCanvas directed={directed} settings={settings} testCases={testCases}></GraphCanvas>
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>

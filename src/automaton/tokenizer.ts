@@ -79,34 +79,7 @@ export class Tokenizer {
         }
       });
 
-    if (tokens.length === 0) return [Token.EOF()];
-
-    const processedTokens: Token[] = [Token.LeftParen(), tokens[0]];
-    for (let i = 1; i < tokens.length; ++i) {
-      const prv = tokens[i - 1].type;
-      const cur = tokens[i].type;
-
-      if (this.isConcatL(prv) && this.isConcatR(cur)) processedTokens.push(Token.Circumpunct());
-      processedTokens.push(tokens[i]);
-    }
-
-    processedTokens.push(Token.RightParen());
-    processedTokens.push(Token.EOF());
-
-    return processedTokens;
-  }
-
-  private isConcatL(type: TokenType) {
-    return (
-      type === TokenType.Alphabet ||
-      type === TokenType.RightParen ||
-      type === TokenType.Asterisk ||
-      type === TokenType.QuestionMark ||
-      type === TokenType.Plus
-    );
-  }
-
-  private isConcatR(type: TokenType) {
-    return type === TokenType.Alphabet || type === TokenType.LeftParen;
+    tokens.push(Token.EOF());
+    return tokens;
   }
 }

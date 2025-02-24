@@ -172,30 +172,28 @@ export class Parser {
   constructor(private tokens: Token[]) {}
 
   public parse() {
-    return this.expression();
-  }
-
-  private expression(): Expression {
     return this.union();
   }
 
-  private union(): Expression {
-    let expr = this.concatenation();
+  public reset() {
+    this.current = 0;
+  }
 
-    while (this.match(TokenType.Pipe)) {
-      const right = this.concatenation();
-      expr = new UnionExpression(expr, right);
+  private union(): Expression {
+    let expr = this.concatenate();
+
+    if (this.match(TokenType.Pipe)) {
+      expr = new UnionExpression(expr, this.union());
     }
 
     return expr;
   }
 
-  private concatenation(): Expression {
+  private concatenate(): Expression {
     let expr = this.option();
 
-    while (this.match(TokenType.Circumpunct)) {
-      const right = this.option();
-      expr = new ConcatenateExpression(expr, right);
+    if (!this.isAtEnd() && !this.check(TokenType.RightParen) && !this.check(TokenType.Pipe)) {
+      expr = new ConcatenateExpression(expr, this.concatenate());
     }
 
     return expr;
@@ -232,18 +230,15 @@ export class Parser {
   }
 
   private primary(): Expression {
-    if (this.match(TokenType.Alphabet)) {
-      const alph = this.previous();
-      return new LiteralExpression(alph);
-    }
-
     if (this.match(TokenType.LeftParen)) {
-      const expr = this.expression();
+      const expr = this.union();
+
       this.consume(TokenType.RightParen);
       return new GroupingExpression(expr);
     }
 
-    throw new Error("HOW");
+    this.consume(TokenType.Alphabet);
+    return new LiteralExpression(this.previous());
   }
 
   private match(...types: TokenType[]) {
