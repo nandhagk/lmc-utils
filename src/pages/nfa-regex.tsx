@@ -10,8 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import { Spinner } from "@/components/ui/spinner";
-import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const FormSchema = z.object({
   alphabet: z.string(),
@@ -38,7 +38,7 @@ export function NFARegex() {
 
     if (!success) {
       setIsOpen(false);
-      toast({ variant: "destructive", description: "Parse failure!" });
+      toast.error("Parse failure!", { richColors: true });
     } else {
       const { regex } = e.data;
 
@@ -127,7 +127,7 @@ export function NFARegex() {
                     />
                   </div>
 
-                  <Button type="submit" className="w-full">
+                  <Button type="submit" className="cursor-pointer w-full">
                     Find
                   </Button>
                 </div>

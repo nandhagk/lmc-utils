@@ -9,8 +9,8 @@ import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const FormSchema = z.object({
   alphabet: z.string(),
@@ -35,7 +35,7 @@ export function RegexEq() {
 
     if (!success) {
       setIsOpen(false);
-      toast({ variant: "destructive", description: "Parse failure!" });
+      toast.error("Parse failure!", { richColors: true });
     } else {
       const { d1, d2 } = e.data;
 
@@ -114,7 +114,7 @@ export function RegexEq() {
                       )}
                     />
                   </div>
-                  <Button type="submit" className="w-full">
+                  <Button type="submit" className="cursor-pointer w-full">
                     Check
                   </Button>
                 </div>
