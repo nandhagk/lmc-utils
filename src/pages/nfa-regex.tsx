@@ -33,6 +33,8 @@ export function NFARegex() {
   });
 
   const graph = form.watch("nfa");
+  const selected = form.watch("accept");
+
   const [worker, setWorker] = useState<Worker | null>(null);
 
   useEffect(() => {
@@ -145,7 +147,7 @@ export function NFARegex() {
             </Form>
           </div>
         </div>
-        <GraphCanvas graph={graph}></GraphCanvas>
+        <GraphCanvas graph={graph} selected={selected.split(",").map((s) => s.trim())}></GraphCanvas>
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>

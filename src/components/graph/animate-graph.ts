@@ -17,12 +17,12 @@ class Node {
   markColor: number | undefined;
   selected: boolean;
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, selected: boolean = false) {
     this.pos = {
       x,
       y,
     };
-    this.selected = false;
+    this.selected = selected;
   }
 
   inBounds(): boolean {
@@ -169,7 +169,7 @@ let adjSet = new Map<string, Set<string>>(); // PERF: used to compute `isEdge`
 let colorMap: ColorMap | undefined = undefined;
 let layerMap: LayerMap | undefined = undefined;
 
-function updateNodes(graphNodes: string[]): void {
+function updateNodes(graphNodes: string[], selected: string[]): void {
   const deletedNodes: string[] = [];
 
   for (const u of nodes) {
@@ -198,7 +198,7 @@ function updateNodes(graphNodes: string[]): void {
 
       nodes.push(u);
 
-      nodeMap.set(u, new Node(coords.x, coords.y));
+      nodeMap.set(u, new Node(coords.x, coords.y, selected.includes(u)));
     }
   }
 
@@ -346,6 +346,7 @@ export function updateGraph(testCases: TestCases) {
 
   let rawNodes: string[] = [];
   let rawEdges: string[] = [];
+  let rawSelected: string[] = [];
 
   const rawAdj = new Map<string, string[]>();
   const rawEdgeLabels = new Map<string, string>();
@@ -356,6 +357,8 @@ export function updateGraph(testCases: TestCases) {
     } else {
       testCase.graphEdges.nodes.map((u) => nodesToConceal.add(u));
     }
+
+    rawSelected = [...rawSelected, ...testCase.selected];
 
     rawNodes = [...rawNodes, ...testCase.graphEdges.nodes];
     rawNodes = [...rawNodes, ...testCase.graphParChild.nodes];
@@ -378,7 +381,7 @@ export function updateGraph(testCases: TestCases) {
     });
   });
 
-  updateNodes(rawNodes);
+  updateNodes(rawNodes, rawSelected);
   updateEdges(rawEdges);
 
   adj = new Map<string, string[]>(rawAdj);

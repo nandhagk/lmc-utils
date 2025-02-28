@@ -8,9 +8,10 @@ import { getDefaultGraph } from "./utils";
 
 interface Props {
   graph: string;
+  selected: string[];
 }
 
-export function GraphCanvas({ graph }: Props) {
+export function GraphCanvas({ graph, selected }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   const resizeCanvas = () => {
@@ -18,8 +19,6 @@ export function GraphCanvas({ graph }: Props) {
     if (canvas === null) return;
 
     const pixelRatio = window.devicePixelRatio;
-
-    console.log(JSON.parse(JSON.stringify([canvas.clientHeight, canvas.height])));
 
     canvas.width = pixelRatio * canvas.clientWidth;
     canvas.height = pixelRatio * canvas.clientHeight;
@@ -85,13 +84,14 @@ export function GraphCanvas({ graph }: Props) {
             0,
             {
               graphEdges: parseGraphInputEdges("", graph, 0).graph!,
+              selected,
               graphParChild: getDefaultGraph(),
               inputFormat: "edges",
             },
           ],
         ])
       ),
-    [graph]
+    [selected, graph]
   );
 
   return (

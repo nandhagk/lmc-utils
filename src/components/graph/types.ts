@@ -16,6 +16,7 @@ export interface TestCase {
   graphEdges: Graph;
   graphParChild: Graph;
   inputFormat: InputFormat;
+  selected: string[];
 }
 
 export type TestCases = Map<number, TestCase>;
