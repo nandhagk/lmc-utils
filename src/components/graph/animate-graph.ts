@@ -223,7 +223,6 @@ function updateEdges(graphEdges: string[]): void {
 function updateVelocities() {
   for (const u of nodes) {
     if (nodesToConceal.has(u)) continue;
-    if (nodeMap.get(u)!.selected && settings.fixedMode) continue;
 
     const uPos = nodeMap.get(u)!.pos;
 
