@@ -80,7 +80,7 @@ export function RegexEq() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input id="alphabet" className="font-[MonoLisa]" placeholder="Alphabet" {...field} />
+                            <Input id="alphabet" className="font-mono" placeholder="Alphabet" {...field} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -94,7 +94,7 @@ export function RegexEq() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input id="regex1" className="font-[MonoLisa]" placeholder="Regular Expression" {...field} />
+                            <Input id="regex1" className="font-mono" placeholder="Regular Expression" {...field} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -108,7 +108,7 @@ export function RegexEq() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input id="regex2" className="font-[MonoLisa]" placeholder="Regular Expression" {...field} />
+                            <Input id="regex2" className="font-mono" placeholder="Regular Expression" {...field} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -137,7 +137,7 @@ export function RegexEq() {
                 <div className="flex items-center space-x-2">
                   <div className="grid flex-1 gap-2">
                     <Label htmlFor="m1">Matched by 1 but not by 2</Label>
-                    <pre className="text-wrap font-[MonoLisa] md:text-sm">{m1}</pre>
+                    <pre className="text-wrap font-mono md:text-sm">{m1 === "" ? "[empty-string]" : m1}</pre>
                   </div>
                 </div>
               )}
@@ -145,7 +145,7 @@ export function RegexEq() {
                 <div className="flex items-center space-x-2">
                   <div className="grid flex-1 gap-2">
                     <Label htmlFor="m2">Matched by 2 but not by 1</Label>
-                    <pre className="text-wrap font-[MonoLisa] md:text-sm">{m2}</pre>
+                    <pre className="text-wrap font-mono md:text-sm">{m2 === "" ? "[empty-string]" : m2}</pre>
                   </div>
                 </div>
               )}

@@ -1,5 +1,5 @@
 export const EPSILON = "ε";
-export const ALLOWED = /([a-z]|[0-9]|[A-Z]|\||\*|\+|\?|\(|\))/;
+export const ALLOWED = new RegExp(`([a-z]|[0-9]|[A-Z]|${EPSILON}|\\||\\*|\\+|\\?|\\(|\\))`);
 
 export const enum TokenType {
   LeftParen,

@@ -5,5 +5,10 @@
 
 :root,
 .toast {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-sans: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-mono: MonoLisa;
+}
+
+.font-mono {
+  font-feature-settings: "ss01" 1 !important;
 }

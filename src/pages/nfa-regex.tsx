@@ -78,7 +78,7 @@ export function NFARegex() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input id="alphabet" className="font-[MonoLisa]" placeholder="Alphabet" {...field} />
+                            <Input id="alphabet" className="font-mono" placeholder="Alphabet" {...field} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -92,7 +92,7 @@ export function NFARegex() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input id="start" className="font-[MonoLisa]" placeholder="Start" {...field} />
+                            <Input id="start" className="font-mono" placeholder="Start" {...field} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -106,7 +106,7 @@ export function NFARegex() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input id="accept" className="font-[MonoLisa]" placeholder="Accept" {...field} />
+                            <Input id="accept" className="font-mono" placeholder="Accept" {...field} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -120,7 +120,7 @@ export function NFARegex() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Textarea id="nfa" placeholder="NFA" {...field} className="min-h-36 font-[MonoLisa]" />
+                            <Textarea id="nfa" placeholder="NFA" {...field} className="min-h-36 font-mono" />
                           </FormControl>
                         </FormItem>
                       )}
@@ -147,7 +147,7 @@ export function NFARegex() {
           ) : (
             <div className="flex items-center space-x-2">
               <div className="grid flex-1 gap-2">
-                <pre className="text-wrap font-[MonoLisa] md:text-sm">{regex}</pre>
+                <pre className="text-wrap font-mono md:text-sm">{regex}</pre>
               </div>
             </div>
           )}

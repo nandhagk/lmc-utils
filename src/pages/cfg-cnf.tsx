@@ -72,7 +72,7 @@ export function CFGCNF() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Textarea id="cfg" placeholder="CFG" {...field} className="min-h-36 font-[MonoLisa]" />
+                            <Textarea id="cfg" placeholder="CFG" {...field} className="min-h-36 font-mono" />
                           </FormControl>
                         </FormItem>
                       )}
@@ -99,7 +99,7 @@ export function CFGCNF() {
           ) : (
             <div className="flex items-center space-x-2">
               <div className="grid flex-1 gap-2">
-                <pre className="text-wrap font-[MonoLisa] md:text-sm">{cnf}</pre>
+                <pre className="text-wrap font-mono md:text-sm">{cnf}</pre>
               </div>
             </div>
           )}
