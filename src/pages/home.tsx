@@ -1,5 +1,5 @@
 export function Home() {
-  const backgrounds = ["yogi", "shishu"];
+  const backgrounds = ["yogi", "shishu", "migil"];
   return (
     <div
       className="h-full bg-repeat-round"
