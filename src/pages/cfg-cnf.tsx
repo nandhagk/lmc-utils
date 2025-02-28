@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import { Spinner } from "@/components/ui/spinner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const FormSchema = z.object({
@@ -28,28 +28,36 @@ export function CFGCNF() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const worker = new Worker(new URL("@/workers/cfg-cnf.ts", import.meta.url));
+  const [worker, setWorker] = useState<Worker | null>(null);
+
+  useEffect(() => {
+    const worker = new Worker(new URL("@/workers/cfg-cnf.ts", import.meta.url));
+
+    worker.onmessage = (e: MessageEvent<{ success: boolean; cnf: string }>) => {
+      const { success } = e.data;
+
+      if (!success) {
+        setIsOpen(false);
+        toast.error("Parse failure!", { richColors: true });
+      } else {
+        const { cnf } = e.data;
+
+        setCNF(cnf);
+        setIsLoading(false);
+      }
+    };
+
+    setWorker(worker);
+
+    return () => worker.terminate();
+  }, []);
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsLoading(true);
     setIsOpen(true);
 
-    worker.postMessage(data);
+    worker?.postMessage(data);
   }
-
-  worker.onmessage = (e: MessageEvent<{ success: boolean; cnf: string }>) => {
-    const { success } = e.data;
-
-    if (!success) {
-      setIsOpen(false);
-      toast.error("Parse failure!", { richColors: true });
-    } else {
-      const { cnf } = e.data;
-
-      setCNF(cnf);
-      setIsLoading(false);
-    }
-  };
 
   return (
     <>

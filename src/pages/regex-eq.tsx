@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { DFA } from "@/finite-automata/dfa";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const FormSchema = z.object({
@@ -28,24 +28,32 @@ export function RegexEq() {
     },
   });
 
-  const worker = new Worker(new URL("@/workers/regex-eq.ts", import.meta.url));
+  const [worker, setWorker] = useState<Worker | null>(null);
 
-  worker.onmessage = (e: MessageEvent<{ success: boolean; d1: DFA; d2: DFA }>) => {
-    const { success } = e.data;
+  useEffect(() => {
+    const worker = new Worker(new URL("@/workers/regex-eq.ts", import.meta.url));
 
-    if (!success) {
-      setIsOpen(false);
-      toast.error("Parse failure!", { richColors: true });
-    } else {
-      const { d1, d2 } = e.data;
+    worker.onmessage = (e: MessageEvent<{ success: boolean; d1: DFA; d2: DFA }>) => {
+      const { success } = e.data;
 
-      setM1(DFA.findMatch(d1));
-      setM2(DFA.findMatch(d2));
-      setEQ(d1.F.size === 0 && d2.F.size == 0);
+      if (!success) {
+        setIsOpen(false);
+        toast.error("Parse failure!", { richColors: true });
+      } else {
+        const { d1, d2 } = e.data;
 
-      setIsLoading(false);
-    }
-  };
+        setM1(DFA.findMatch(d1));
+        setM2(DFA.findMatch(d2));
+        setEQ(d1.F.size === 0 && d2.F.size == 0);
+
+        setIsLoading(false);
+      }
+    };
+
+    setWorker(worker);
+
+    return () => worker.terminate();
+  }, []);
 
   const [eq, setEQ] = useState(true);
   const [m1, setM1] = useState<string | null>(null);
@@ -57,7 +65,7 @@ export function RegexEq() {
     setIsLoading(true);
     setIsOpen(true);
 
-    worker.postMessage(data);
+    worker?.postMessage(data);
   }
 
   return (

@@ -9,8 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
+import { GraphCanvas } from "@/components/graph/graph-canvas";
 import { Spinner } from "@/components/ui/spinner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const FormSchema = z.object({
@@ -31,21 +32,30 @@ export function NFARegex() {
     },
   });
 
-  const worker = new Worker(new URL("@/workers/nfa-regex.ts", import.meta.url));
+  const graph = form.watch("nfa");
+  const [worker, setWorker] = useState<Worker | null>(null);
 
-  worker.onmessage = (e: MessageEvent<{ success: boolean; regex: string }>) => {
-    const { success } = e.data;
+  useEffect(() => {
+    const worker = new Worker(new URL("@/workers/nfa-regex.ts", import.meta.url));
 
-    if (!success) {
-      setIsOpen(false);
-      toast.error("Parse failure!", { richColors: true });
-    } else {
-      const { regex } = e.data;
+    worker.onmessage = (e: MessageEvent<{ success: boolean; regex: string }>) => {
+      const { success } = e.data;
 
-      setRegex(regex);
-      setIsLoading(false);
-    }
-  };
+      if (!success) {
+        setIsOpen(false);
+        toast.error("Parse failure!", { richColors: true });
+      } else {
+        const { regex } = e.data;
+
+        setRegex(regex);
+        setIsLoading(false);
+      }
+    };
+
+    setWorker(worker);
+
+    return () => worker.terminate();
+  }, []);
 
   const [regex, setRegex] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -55,7 +65,7 @@ export function NFARegex() {
     setIsLoading(true);
     setIsOpen(true);
 
-    worker.postMessage(data);
+    worker?.postMessage(data);
   }
 
   return (
@@ -135,6 +145,7 @@ export function NFARegex() {
             </Form>
           </div>
         </div>
+        <GraphCanvas graph={graph}></GraphCanvas>
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>

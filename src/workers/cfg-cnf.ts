@@ -30,15 +30,17 @@
 
       const rules = grammar.get(variable)!;
       for (const rule of rules) {
-        const idxs = rule
-          .map((v, i) => [v, i] as [string, number])
-          .filter(([v]) => v === epsilonVariable)
-          .map(([, i]) => i);
+        const idxs = new Map(
+          rule
+            .map((v, i) => [v, i] as [string, number])
+            .filter(([v]) => v === epsilonVariable)
+            .map(([, i], j) => [i, j])
+        );
 
-        if (idxs.length === 0) continue;
+        if (idxs.size === 0) continue;
 
-        for (let k = 1n << BigInt(idxs.length); k >= 0n; --k) {
-          const newRule = rule.filter((v, i) => v !== epsilonVariable || (k >> BigInt(idxs.indexOf(i))) & 1n);
+        for (let k = 1n << BigInt(idxs.size); k >= 0n; --k) {
+          const newRule = rule.filter((v, i) => v !== epsilonVariable || (k >> BigInt(idxs.get(i)!)) & 1n);
           if (newRule.length === 0) {
             if (variable === epsilonVariable) continue;
             newRule.push(EPSILON);
@@ -151,7 +153,6 @@
       const rules = grammar.get(variable)!;
 
       const newGrammar = new Map<string, string[][]>();
-      const newVariables = [];
 
       let variableIndex = 0;
       for (const rule of rules) {
@@ -183,7 +184,7 @@
 
           const nextVariable = `${variable}${++variableIndex}`;
 
-          newVariables.push(nextVariable);
+          variables.push(nextVariable);
           rulesMap.set(hash, nextVariable);
 
           if (!newGrammar.has(prevVariable)) newGrammar.set(prevVariable, []);
@@ -194,7 +195,6 @@
       }
 
       for (const [k, v] of newGrammar.entries()) grammar.set(k, v);
-      variables.splice(variables.indexOf(variable) + 1, 0, ...newVariables);
     }
   };
 
@@ -203,7 +203,7 @@
 
     try {
       const parsed = parseCFG(cfg);
-      parsed.splice(0, 0, [parsed[0][0] + "0", [[parsed[0][0]]]]);
+      parsed.splice(0, 0, ["S0", [[parsed[0][0]]]]);
 
       const variables = parsed.map(([variable]) => variable);
       const grammar = new Map(parsed);
