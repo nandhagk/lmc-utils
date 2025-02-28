@@ -1,5 +1,5 @@
-import { NFA } from "@/automaton/nfa";
-import { EPSILON } from "@/automaton/tokenizer";
+import { NFA } from "@/finite-automata/nfa";
+import { EPSILON } from "@/finite-automata/tokenizer";
 
 const setToBigInt = (s: Set<number>) => [...s].reduce((acc, cur) => (acc |= 1n << BigInt(cur)), 0n);
 

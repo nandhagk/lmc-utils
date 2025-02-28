@@ -31,6 +31,15 @@ const data = [
       },
     ],
   },
+  {
+    title: "Pushdown Automata",
+    items: [
+      {
+        title: "CFG to CNF",
+        url: "/cfg-cnf",
+      },
+    ],
+  },
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

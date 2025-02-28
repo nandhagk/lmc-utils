@@ -1,9 +1,9 @@
 (async () => {
   const [{ DFA }, { NFA }, { GNFA }, { EPSILON }] = await Promise.all([
-    import("@/automaton/dfa"),
-    import("@/automaton/nfa"),
-    import("@/automaton/gnfa"),
-    import("@/automaton/tokenizer"),
+    import("@/finite-automata/dfa"),
+    import("@/finite-automata/nfa"),
+    import("@/finite-automata/gnfa"),
+    import("@/finite-automata/tokenizer"),
   ]);
 
   self.onmessage = (e: MessageEvent<{ alphabet: string; start: string; accept: string; nfa: string }>) => {

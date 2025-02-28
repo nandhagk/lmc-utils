@@ -1,5 +1,5 @@
-import { DFA } from "@/automaton/dfa";
-import { EPSILON } from "@/automaton/tokenizer";
+import { DFA } from "@/finite-automata/dfa";
+import { EPSILON } from "@/finite-automata/tokenizer";
 
 export class GNFA {
   private E = new Map<number, Map<number, string>>();

@@ -2,13 +2,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { DFA } from "@/automaton/dfa";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { DFA } from "@/finite-automata/dfa";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -80,7 +80,7 @@ export function RegexEq() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input id="alphabet" placeholder="Alphabet" {...field} />
+                            <Input id="alphabet" className="font-[MonoLisa]" placeholder="Alphabet" {...field} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -94,7 +94,7 @@ export function RegexEq() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input id="regex1" placeholder="Regular Expression" {...field} />
+                            <Input id="regex1" className="font-[MonoLisa]" placeholder="Regular Expression" {...field} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -108,7 +108,7 @@ export function RegexEq() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input id="regex2" placeholder="Regular Expression" {...field} />
+                            <Input id="regex2" className="font-[MonoLisa]" placeholder="Regular Expression" {...field} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -137,7 +137,7 @@ export function RegexEq() {
                 <div className="flex items-center space-x-2">
                   <div className="grid flex-1 gap-2">
                     <Label htmlFor="m1">Matched by 1 but not by 2</Label>
-                    <Input id="m1" defaultValue={m1} readOnly />
+                    <pre className="text-wrap font-[MonoLisa] md:text-sm">{m1}</pre>
                   </div>
                 </div>
               )}
@@ -145,7 +145,7 @@ export function RegexEq() {
                 <div className="flex items-center space-x-2">
                   <div className="grid flex-1 gap-2">
                     <Label htmlFor="m2">Matched by 2 but not by 1</Label>
-                    <Input id="m2" defaultValue={m2} readOnly />
+                    <pre className="text-wrap font-[MonoLisa] md:text-sm">{m2}</pre>
                   </div>
                 </div>
               )}

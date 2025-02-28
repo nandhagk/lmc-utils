@@ -1,6 +1,6 @@
-import { DFA } from "@/automaton/dfa";
-import { NFAVisitor, Parser } from "@/automaton/parser";
-import { EPSILON, Tokenizer } from "@/automaton/tokenizer";
+import { DFA } from "@/finite-automata/dfa";
+import { NFAVisitor, Parser } from "@/finite-automata/parser";
+import { EPSILON, Tokenizer } from "@/finite-automata/tokenizer";
 
 export class NFA {
   constructor(

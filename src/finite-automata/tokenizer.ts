@@ -9,7 +9,6 @@ export const enum TokenType {
   QuestionMark,
   Plus,
   Alphabet,
-  Circumpunct,
   EOF,
 }
 
@@ -42,10 +41,6 @@ export class Token {
 
   static Plus() {
     return new Token(TokenType.Plus, "+");
-  }
-
-  static Circumpunct() {
-    return new Token(TokenType.Circumpunct, ".");
   }
 
   static Alphabet(sym: string) {

@@ -1,4 +1,5 @@
 import { Layout } from "@/layout";
+import { CFGCNF } from "@/pages/cfg-cnf";
 import { Home } from "@/pages/home";
 import { NFARegex } from "@/pages/nfa-regex";
 import { RegexEq } from "@/pages/regex-eq";
@@ -13,6 +14,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="/regex-eq" element={<RegexEq />} />
           <Route path="/nfa-regex" element={<NFARegex />} />
+          <Route path="/cfg-cnf" element={<CFGCNF />} />
         </Route>
       </Routes>
     </BrowserRouter>

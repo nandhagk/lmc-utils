@@ -25,9 +25,9 @@ export function NFARegex() {
     resolver: zodResolver(FormSchema),
     defaultValues: {
       alphabet: "a,b",
-      start: "1",
-      accept: "1,3",
-      nfa: "1 2 a,b\n2 2 a\n2 3 b\n3 2 b\n3 1 a",
+      start: "q1",
+      accept: "q1,q3",
+      nfa: "q1 q2 a,b\nq2 q2 a\nq2 q3 b\nq3 q2 b\nq3 q1 a",
     },
   });
 
@@ -78,7 +78,7 @@ export function NFARegex() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input id="alphabet" placeholder="Alphabet" {...field} />
+                            <Input id="alphabet" className="font-[MonoLisa]" placeholder="Alphabet" {...field} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -92,7 +92,7 @@ export function NFARegex() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input id="start" placeholder="Start" {...field} />
+                            <Input id="start" className="font-[MonoLisa]" placeholder="Start" {...field} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -106,7 +106,7 @@ export function NFARegex() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input id="accept" placeholder="Accept" {...field} />
+                            <Input id="accept" className="font-[MonoLisa]" placeholder="Accept" {...field} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -120,7 +120,7 @@ export function NFARegex() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Textarea id="nfa" placeholder="NFA" {...field} className="min-h-36" />
+                            <Textarea id="nfa" placeholder="NFA" {...field} className="min-h-36 font-[MonoLisa]" />
                           </FormControl>
                         </FormItem>
                       )}
@@ -147,7 +147,7 @@ export function NFARegex() {
           ) : (
             <div className="flex items-center space-x-2">
               <div className="grid flex-1 gap-2">
-                <Textarea id="regex" defaultValue={regex} readOnly />
+                <pre className="text-wrap font-[MonoLisa] md:text-sm">{regex}</pre>
               </div>
             </div>
           )}
