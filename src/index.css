@@ -15,8 +15,7 @@
   height: 100vh;
 }
 
-:root,
-.toast {
+* {
   --font-sans: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   --font-mono: "CustomFont", Arial;
   font-feature-settings: "ss01" 1, "zero" 1, "ss13" 0 !important;
