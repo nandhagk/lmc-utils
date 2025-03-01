@@ -65,8 +65,8 @@ export class GNFA {
     if (b.length > 1) b = `(${b})`;
 
     if (a !== EPSILON && b !== EPSILON) return `(${a}|${b})`;
-    if (a !== EPSILON) return `(${a}?)`;
-    if (b !== EPSILON) return `(${b}?)`;
+    if (a !== EPSILON) return `(${a}|${EPSILON})`;
+    if (b !== EPSILON) return `(${b}|${EPSILON})`;
 
     return EPSILON;
   }

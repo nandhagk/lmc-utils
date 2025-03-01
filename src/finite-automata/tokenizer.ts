@@ -1,5 +1,5 @@
 export const EPSILON = "ε";
-export const ALLOWED = new RegExp(`([a-z]|[0-9]|[A-Z]|${EPSILON}|\\||\\*|\\+|\\?|\\(|\\))`);
+export const ALLOWED = new RegExp(`([a-z]|[0-9]|[A-Z]|${EPSILON}|~|\\||\\*|\\+|\\?|\\(|\\))`);
 
 export const enum TokenType {
   LeftParen,
@@ -70,7 +70,7 @@ export class Tokenizer {
           case "?":
             return Token.QuestionMark();
           default:
-            return Token.Alphabet(sym);
+            return Token.Alphabet(sym === "~" ? EPSILON : sym);
         }
       });
 

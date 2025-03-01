@@ -160,7 +160,7 @@ export function NFARegex() {
           ) : (
             <div className="flex items-center space-x-2">
               <div className="grid flex-1 gap-2">
-                <pre className="text-wrap font-mono md:text-sm">{regex}</pre>
+                <pre className="text-wrap break-all font-mono md:text-sm">{regex}</pre>
               </div>
             </div>
           )}
