@@ -2,7 +2,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 
 const pathMap = new Map<string, string[]>([
@@ -29,17 +29,17 @@ export function Layout() {
             <Breadcrumb>
               <BreadcrumbList>
                 {breadcrumbs.map((title, i) =>
-                  i == breadcrumbs.length - 1 ? (
-                    <BreadcrumbItem>
+                  i === breadcrumbs.length - 1 ? (
+                    <BreadcrumbItem key={i}>
                       <BreadcrumbPage>{title}</BreadcrumbPage>
                     </BreadcrumbItem>
                   ) : (
-                    <>
+                    <Fragment key={i}>
                       <BreadcrumbItem className="hidden md:block">
                         <BreadcrumbLink>{title}</BreadcrumbLink>
                       </BreadcrumbItem>
                       <BreadcrumbSeparator className="hidden md:block" />
-                    </>
+                    </Fragment>
                   )
                 )}
               </BreadcrumbList>

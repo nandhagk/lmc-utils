@@ -18,15 +18,15 @@ export function drawLine(ctx: CanvasRenderingContext2D, u: Vector2D, v: Vector2D
   ctx.beginPath();
 
   if (u.x == v.x && u.y === v.y) {
-    ctx.arc(u.x, u.y - 20, 20, 0, 2 * Math.PI);
+    ctx.arc(u.x, u.y - 25, 25, 0, 2 * Math.PI);
   } else {
     let px = u.y - v.y;
     let py = v.x - u.x;
 
     const toFlip = r % 2 == 0;
 
-    px *= 0.5 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
-    py *= 0.5 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
+    px *= 0.4 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
+    py *= 0.4 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
 
     ctx.beginPath();
     ctx.moveTo(u.x, u.y);
@@ -53,8 +53,8 @@ export function drawArrow(
 
   const toFlip = r % 2 == 0;
 
-  px *= 0.375 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
-  py *= 0.375 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
+  px *= 0.3 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
+  py *= 0.3 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
 
   ctx.lineWidth = 1.5 * nodeBorderWidthHalf;
 
@@ -62,7 +62,7 @@ export function drawArrow(
   ctx.fillStyle = edgeColor;
 
   const mx = u.x === v.x && u.y === v.y ? u.x : (u.x + v.x) / 2 + px;
-  const my = u.x === v.x && u.y === v.y ? u.y - 40 : (u.y + v.y) / 2 + py;
+  const my = u.x === v.x && u.y === v.y ? u.y - 50 : (u.y + v.y) / 2 + py;
 
   ctx.beginPath();
 
@@ -95,8 +95,8 @@ export function drawEdgeLabel(
   const bx = px / euclidDist(u, v),
     by = py / euclidDist(u, v);
 
-  px *= 0.37 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
-  py *= 0.37 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
+  px *= 0.295 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
+  py *= 0.295 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
 
   const mult = toReverse ? -1 : 1;
 
@@ -113,11 +113,11 @@ export function drawEdgeLabel(
   ctx.textBaseline = "middle";
   ctx.textAlign = "center";
 
-  ctx.font = `${settings.fontSize}px MonoLisa`;
+  ctx.font = `${settings.fontSize - 2}px MonoLisa`;
   ctx.fillStyle = edgeLabelColor;
 
   if (u.x === v.x && u.y === v.y) {
-    ctx.fillText(label, u.x, u.y - 60);
+    ctx.fillText(label, u.x, u.y - 65);
   } else {
     ctx.fillText(label, mx + px, my + py);
   }

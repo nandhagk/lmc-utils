@@ -50,9 +50,6 @@ export function GraphCanvas({ graph, selected }: Props) {
 
     updateDirected(true);
     updateSettings({
-      language: "en",
-      drawMode: "node",
-      expandedCanvas: false,
       markBorder: "double",
       markColor: 1,
       labelOffset: 0,
@@ -60,39 +57,29 @@ export function GraphCanvas({ graph, selected }: Props) {
       nodeRadius: 25,
       fontSize: 20,
       nodeBorderWidthHalf: 1,
-      edgeLength: 100,
+      edgeLength: 150,
       edgeLabelSeparation: 20,
-      showComponents: false,
-      showBridges: false,
-      showMSTs: false,
-      treeMode: false,
-      bipartiteMode: false,
-      lockMode: false,
-      markedNodes: false,
-      fixedMode: true,
-      multiedgeMode: true,
-      settingsFormat: "general",
     });
     animateGraph(canvas, ctx);
   }, []);
 
-  useEffect(
-    () =>
-      updateGraph(
-        new Map([
-          [
-            0,
-            {
-              graphEdges: parseGraphInputEdges("", graph, 0).graph!,
-              selected,
-              graphParChild: getDefaultGraph(),
-              inputFormat: "edges",
-            },
-          ],
-        ])
-      ),
-    [selected, graph]
-  );
+  useEffect(() => {
+    updateGraph(
+      new Map([
+        [
+          0,
+          {
+            graphEdges: parseGraphInputEdges("", graph, 0).graph!,
+            selected,
+            graphParChild: getDefaultGraph(),
+            inputFormat: "edges",
+          },
+        ],
+      ])
+    );
+
+    console.log({ selected, graph });
+  }, [selected, graph]);
 
   return (
     <div className="min-w-[300px] h-96 md:h-full flex-1 border-2 border-white rounded-lg">

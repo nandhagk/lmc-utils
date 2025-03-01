@@ -22,12 +22,8 @@ export interface TestCase {
 export type TestCases = Map<number, TestCase>;
 
 export interface Settings {
-  language: "en" | "cn";
-  drawMode: "node" | "pen" | "erase";
-  expandedCanvas: boolean;
   markBorder: MarkBorder;
   markColor: number;
-  settingsFormat: SettingsFormat;
   labelOffset: number;
   darkMode: boolean;
   nodeRadius: number;
@@ -35,15 +31,6 @@ export interface Settings {
   nodeBorderWidthHalf: number;
   edgeLength: number;
   edgeLabelSeparation: number;
-  showComponents: boolean;
-  showBridges: boolean;
-  showMSTs: boolean;
-  treeMode: boolean;
-  bipartiteMode: boolean;
-  lockMode: boolean;
-  markedNodes: boolean;
-  fixedMode: boolean;
-  multiedgeMode: boolean;
 }
 
 export interface ParsedGraph {
@@ -52,7 +39,6 @@ export interface ParsedGraph {
 }
 
 export type InputFormat = "edges" | "parentChild";
-export type SettingsFormat = "general" | "appearance";
 
 export type ColorMap = Map<string, number>;
 

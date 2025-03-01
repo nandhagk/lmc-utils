@@ -123,12 +123,8 @@ let oldDirected = false;
 let directed = false;
 
 let settings: Settings = {
-  language: "en",
-  drawMode: "node",
-  expandedCanvas: false,
   markBorder: "double",
   markColor: 1,
-  settingsFormat: "general",
   labelOffset: 0,
   darkMode: true,
   nodeRadius: 15,
@@ -136,15 +132,6 @@ let settings: Settings = {
   nodeBorderWidthHalf: 15,
   edgeLength: 10,
   edgeLabelSeparation: 10,
-  showComponents: false,
-  showBridges: false,
-  showMSTs: false,
-  treeMode: false,
-  bipartiteMode: false,
-  markedNodes: false,
-  lockMode: false,
-  fixedMode: true,
-  multiedgeMode: true,
 };
 
 let lastDeletedNodePos: Vector2D = { x: -1, y: -1 };
@@ -202,6 +189,7 @@ function updateNodes(graphNodes: string[], selected: string[]): void {
     }
   }
 
+  for (const [u, n] of nodeMap.entries()) n.selected = selected.includes(u);
   nodes = graphNodes;
 }
 
@@ -455,17 +443,7 @@ function renderNodes(ctx: CanvasRenderingContext2D) {
 }
 
 function renderEdges(ctx: CanvasRenderingContext2D) {
-  let renderedEdges = [...edges];
-
-  if (!settings.multiedgeMode) {
-    renderedEdges = [];
-    for (const e of edges) {
-      const eBase = [e.split(" ")[0], e.split(" ")[1]].join(" ");
-      if (parseInt(e.split(" ")[2]) === edgeToPos.get(eBase)) {
-        renderedEdges.push(e);
-      }
-    }
-  }
+  const renderedEdges = [...edges];
 
   for (const e of renderedEdges) {
     if (nodesToConceal.has(e.split(" ")[0])) continue;
@@ -479,7 +457,7 @@ function renderEdges(ctx: CanvasRenderingContext2D) {
       toReverse = true;
     }
 
-    const edr = settings.multiedgeMode ? parseInt(e.split(" ")[2]) : 0;
+    const edr = parseInt(e.split(" ")[2]);
     const eRev = e.split(" ")[1] + " " + e.split(" ")[0];
 
     ctx.strokeStyle = strokeColor;
@@ -494,8 +472,7 @@ function renderEdges(ctx: CanvasRenderingContext2D) {
       drawArrow(ctx, pt1, pt2, edr, toReverse, thickness, nodeRadius, edgeColor);
     }
 
-    let labelReverse = false;
-    if (!settings.multiedgeMode) labelReverse = toReverse;
+    const labelReverse = false;
 
     if (edgeLabels.has(e)) {
       if (!edgeLabels.has(eRev)) {
@@ -592,9 +569,7 @@ export function animateGraph(canvas: HTMLCanvasElement, ctx: CanvasRenderingCont
       renderEdges(ctx);
       renderNodes(ctx);
 
-      if (!settings.lockMode) {
-        updateVelocities();
-      }
+      updateVelocities();
     }, 1000 / FPS);
   };
   animate();
