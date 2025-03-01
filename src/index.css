@@ -4,6 +4,24 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+  font-family: "CustomFont";
+  src: url("/MonoLisa-Regular.ttf") format("truetype");
+  font-feature-settings: "ss01" 1, "zero" 1, "ss13" 1 !important;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+}
+
+:root,
+.toast {
+  --font-sans: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-mono: "CustomFont", Arial;
+  font-feature-settings: "ss01" 1, "zero" 1, "ss13" 0 !important;
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);

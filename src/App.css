@@ -1,14 +1,4 @@
-#root {
-  width: 100vw;
-  height: 100vh;
-}
 
-:root,
-.toast {
-  --font-sans: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  --font-mono: MonoLisa;
-}
 
-.font-mono {
-  font-feature-settings: "ss01" 1;
-}
+
+

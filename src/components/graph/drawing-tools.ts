@@ -113,7 +113,7 @@ export function drawEdgeLabel(
   ctx.textBaseline = "middle";
   ctx.textAlign = "center";
 
-  ctx.font = `${settings.fontSize - 2}px MonoLisa`;
+  ctx.font = `${settings.fontSize - 2}px CustomFont`;
   ctx.fillStyle = edgeLabelColor;
 
   if (u.x === v.x && u.y === v.y) {

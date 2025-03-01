@@ -410,7 +410,7 @@ function renderNodes(ctx: CanvasRenderingContext2D) {
 
     const s = stripNode(u);
 
-    ctx.font = `${settings.fontSize + 2}px MonoLisa`;
+    ctx.font = `${settings.fontSize + 2}px CustomFont`;
     ctx.fillStyle = textColor;
     ctx.fillText(isInteger(s) ? (parseInt(s, 10) + labelOffset).toString() : s, node!.pos.x, node!.pos.y + TEXT_Y_OFFSET);
   }

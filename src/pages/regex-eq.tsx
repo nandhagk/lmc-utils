@@ -71,14 +71,14 @@ export function RegexEq() {
   return (
     <>
       <div className="flex flex-col items-center justify-center p-6 md:p-10">
-        <div className="w-100 max-w-sm md:max-w-3xl">
+        <div className="max-w-sm md:max-w-3xl">
           <div className="flex flex-col gap-6">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 md:p-8">
                 <div className="flex flex-col gap-6">
                   <div className="flex flex-col items-center text-center">
                     <h1 className="text-2xl font-bold">RegEx Equivalence</h1>
-                    <p className="text-balance text-muted-foreground">Check equivalence of regular expressions</p>
+                    <p className="text-balance text-muted-foreground">Check equivalence of Regular Expressions</p>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="alphabet">Alphabet</Label>

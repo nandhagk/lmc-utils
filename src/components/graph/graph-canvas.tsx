@@ -35,11 +35,6 @@ export function GraphCanvas({ graph, selected }: Props) {
   }, [ref]);
 
   useEffect(() => {
-    const font = new FontFace("MonoLisa", 'url("./MonoLisa-Regular.otf")');
-
-    font.load();
-    document.fonts.add(font);
-
     const canvas = ref.current!;
     const ctx = canvas.getContext("2d")!;
 
