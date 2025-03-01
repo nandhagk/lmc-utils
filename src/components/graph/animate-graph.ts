@@ -1,10 +1,7 @@
-import { ColorMap, LayerMap, Settings, TestCases } from "./types";
-
-import { stripNode } from "./utils";
-
 import { drawArrow, drawCircle, drawEdgeLabel, drawLine } from "./drawing-tools";
-
 import { FILL_PALETTE_DARK, FILL_PALETTE_LIGHT } from "./palettes";
+import { ColorMap, LayerMap, Settings, TestCases } from "./types";
+import { stripNode } from "./utils";
 
 interface Vector2D {
   x: number;
@@ -137,7 +134,6 @@ let settings: Settings = {
 let lastDeletedNodePos: Vector2D = { x: -1, y: -1 };
 
 let nodes: string[] = [];
-const nodesToConceal = new Set<string>();
 const nodeMap = new Map<string, Node>();
 
 let nodeDist: number = 40;
@@ -210,12 +206,9 @@ function updateEdges(graphEdges: string[]): void {
 
 function updateVelocities() {
   for (const u of nodes) {
-    if (nodesToConceal.has(u)) continue;
-
     const uPos = nodeMap.get(u)!.pos;
 
     for (const v of nodes) {
-      if (nodesToConceal.has(v)) continue;
       if (v !== u) {
         const vPos = nodeMap.get(v)!.pos;
 
@@ -329,8 +322,6 @@ function buildSettings(): void {
 }
 
 export function updateGraph(testCases: TestCases) {
-  nodesToConceal.clear();
-
   let rawNodes: string[] = [];
   let rawEdges: string[] = [];
   let rawSelected: string[] = [];
@@ -339,31 +330,16 @@ export function updateGraph(testCases: TestCases) {
   const rawEdgeLabels = new Map<string, string>();
 
   testCases.forEach((testCase) => {
-    if (testCase.inputFormat === "edges") {
-      testCase.graphParChild.nodes.map((u) => nodesToConceal.add(u));
-    } else {
-      testCase.graphEdges.nodes.map((u) => nodesToConceal.add(u));
-    }
-
     rawSelected = [...rawSelected, ...testCase.selected];
 
     rawNodes = [...rawNodes, ...testCase.graphEdges.nodes];
-    rawNodes = [...rawNodes, ...testCase.graphParChild.nodes];
-
     rawEdges = [...rawEdges, ...testCase.graphEdges.edges];
-    rawEdges = [...rawEdges, ...testCase.graphParChild.edges];
 
     testCase.graphEdges.adj.forEach((v, k) => {
       rawAdj.set(k, v);
     });
-    testCase.graphParChild.adj.forEach((v, k) => {
-      rawAdj.set(k, v);
-    });
 
     testCase.graphEdges.edgeLabels.forEach((v, k) => {
-      rawEdgeLabels.set(k, v);
-    });
-    testCase.graphParChild.edgeLabels.forEach((v, k) => {
       rawEdgeLabels.set(k, v);
     });
   });
@@ -409,8 +385,6 @@ function renderNodes(ctx: CanvasRenderingContext2D) {
   for (let i = 0; i < nodes.length; i++) {
     const u = nodes[i];
 
-    if (nodesToConceal.has(u)) continue;
-
     const node = nodeMap.get(u)!;
 
     ctx.lineWidth = 2 * nodeBorderWidthHalf;
@@ -446,8 +420,6 @@ function renderEdges(ctx: CanvasRenderingContext2D) {
   const renderedEdges = [...edges];
 
   for (const e of renderedEdges) {
-    if (nodesToConceal.has(e.split(" ")[0])) continue;
-
     let pt1 = nodeMap.get(e.split(" ")[0])!.pos;
     let pt2 = nodeMap.get(e.split(" ")[1])!.pos;
     let toReverse = false;

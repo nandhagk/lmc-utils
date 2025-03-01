@@ -1,12 +1,11 @@
-import { Graph, InputFormat } from "./types";
+import { Graph } from "./types";
 
 export function isInteger(s: string) {
   return parseInt(s).toString() === s;
 }
 
-export function padNode(u: string, testCaseNumber: number, inputFormat: InputFormat) {
+export function padNode(u: string, testCaseNumber: number) {
   for (let i = 0; i < testCaseNumber; i++) u = "⋅" + u;
-  if (inputFormat === "parentChild") u = "ρ" + u;
   return u;
 }
 

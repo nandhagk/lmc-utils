@@ -33,131 +33,6 @@ function parseLeetcodeStyle(s: string): LeetcodeParsed {
   };
 }
 
-export function parseGraphInputParentChild(
-  roots: string,
-  parent: string,
-  child: string,
-  labels: string,
-  nodeLabels: string,
-  testCaseNumber: number
-): ParsedGraph {
-  const p = parent
-    .trim()
-    .split(/\s+/)
-    .filter((u) => u.length);
-
-  const c = child
-    .trim()
-    .split(/\s+/)
-    .filter((u) => u.length);
-
-  const l = labels
-    .trim()
-    .split(/\s+/)
-    .filter((u) => u.length);
-
-  const nl = nodeLabels
-    .trim()
-    .split(/\s+/)
-    .filter((u) => u.length);
-
-  const edgeCnt = Math.min(p.length, c.length);
-
-  const nodes = new Array<string>();
-  const adj = new Map<string, string[]>();
-  const rev = new Map<string, string[]>();
-  const edgeToPos = new Map<string, number>();
-  const edges = new Array<string>();
-  const edgeLabels = new Map<string, string>();
-
-  roots
-    .trim()
-    .split(/\s+/)
-    .map((u) => {
-      const pu = padNode(u, testCaseNumber, "parentChild");
-      if (u.length && !nodes.includes(pu)) {
-        nodes.push(pu);
-        adj.set(pu, []);
-      }
-    });
-
-  for (let i = 0; i < edgeCnt; i++) {
-    const pi = padNode(p[i], testCaseNumber, "parentChild");
-    const ci = padNode(c[i], testCaseNumber, "parentChild");
-    if (pi === ci && !nodes.includes(pi)) {
-      nodes.push(pi);
-      adj.set(pi, []);
-    } else {
-      if (!nodes.includes(pi)) {
-        nodes.push(pi);
-        adj.set(pi, [ci]);
-      } else {
-        adj.set(pi, [...adj.get(pi)!, ci]);
-      }
-
-      if (!nodes.includes(ci)) {
-        nodes.push(ci);
-        adj.set(ci, []);
-      }
-
-      let edgeBase = "";
-
-      if (pi <= ci) {
-        edgeBase = [pi, ci].join(" ");
-      } else {
-        edgeBase = [ci, pi].join(" ");
-      }
-
-      if (edgeToPos.get(edgeBase) === undefined) {
-        edgeToPos.set(edgeBase, 0);
-      } else {
-        edgeToPos.set(edgeBase, edgeToPos.get(edgeBase)! + 1);
-      }
-
-      edges.push([pi, ci, edgeToPos.get(edgeBase)].join(" "));
-
-      if (i < l.length) {
-        edgeLabels.set([pi, ci, edgeToPos.get(edgeBase)].join(" "), l[i]);
-      }
-    }
-  }
-
-  for (const [u, vs] of adj.entries()) {
-    if (!rev.has(u)) {
-      rev.set(u, []);
-    }
-    for (const v of vs) {
-      if (rev.has(v)) {
-        rev.set(v, [...rev.get(v)!, u]);
-      } else {
-        rev.set(v, [u]);
-      }
-    }
-  }
-
-  const sortedNodes = [...nodes].sort();
-
-  const len = Math.min(sortedNodes.length, nl.length);
-
-  const mp = new Map<string, string>();
-
-  for (let i = 0; i < len; i++) {
-    if (nl[i] !== "_") {
-      mp.set(sortedNodes[i], nl[i]);
-    }
-  }
-
-  return {
-    status: "OK",
-    graph: {
-      nodes,
-      adj,
-      edges,
-      edgeLabels,
-    },
-  };
-}
-
 export function parseGraphInputEdges(roots: string, input: string, testCaseNumber: number): ParsedGraph {
   const leetcodes = new Array<string[]>();
 
@@ -192,7 +67,7 @@ export function parseGraphInputEdges(roots: string, input: string, testCaseNumbe
     .trim()
     .split(/\s+/)
     .map((u) => {
-      const pu = padNode(u, testCaseNumber, "edges");
+      const pu = padNode(u, testCaseNumber);
       if (u.length && !nodes.includes(pu)) {
         nodes.push(pu);
         adj.set(pu, []);
@@ -201,14 +76,14 @@ export function parseGraphInputEdges(roots: string, input: string, testCaseNumbe
 
   for (const e of raw) {
     if (e.length == 1) {
-      const pu = padNode(e[0], testCaseNumber, "edges");
+      const pu = padNode(e[0], testCaseNumber);
       if (!nodes.includes(pu)) {
         nodes.push(pu);
         adj.set(pu, []);
       }
     } else if (e.length <= 3) {
-      const pu = padNode(e[0], testCaseNumber, "edges");
-      const pv = padNode(e[1], testCaseNumber, "edges");
+      const pu = padNode(e[0], testCaseNumber);
+      const pv = padNode(e[1], testCaseNumber);
 
       if (!nodes.includes(pu)) {
         nodes.push(pu);

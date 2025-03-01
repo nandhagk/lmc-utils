@@ -14,8 +14,6 @@ export interface TestCase {
    * Consider implementing an adjacency matrix input format in the future.
    */
   graphEdges: Graph;
-  graphParChild: Graph;
-  inputFormat: InputFormat;
   selected: string[];
 }
 
@@ -37,8 +35,6 @@ export interface ParsedGraph {
   status: "OK" | "BAD";
   graph?: Graph;
 }
-
-export type InputFormat = "edges" | "parentChild";
 
 export type ColorMap = Map<string, number>;
 

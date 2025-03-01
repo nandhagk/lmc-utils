@@ -1,10 +1,7 @@
 import { useEffect, useRef } from "react";
 
-import { animateGraph, updateDirected, updateSettings } from "./animate-graph";
-
-import { resizeGraph, updateGraph } from "./animate-graph";
+import { animateGraph, resizeGraph, updateDirected, updateGraph, updateSettings } from "./animate-graph";
 import { parseGraphInputEdges } from "./parse-graph-input";
-import { getDefaultGraph } from "./utils";
 
 interface Props {
   graph: string;
@@ -63,23 +60,7 @@ export function GraphCanvas({ graph, selected }: Props) {
     animateGraph(canvas, ctx);
   }, []);
 
-  useEffect(() => {
-    updateGraph(
-      new Map([
-        [
-          0,
-          {
-            graphEdges: parseGraphInputEdges("", graph, 0).graph!,
-            selected,
-            graphParChild: getDefaultGraph(),
-            inputFormat: "edges",
-          },
-        ],
-      ])
-    );
-
-    console.log({ selected, graph });
-  }, [selected, graph]);
+  useEffect(() => updateGraph(new Map([[0, { graphEdges: parseGraphInputEdges("", graph, 0).graph!, selected }]])), [selected, graph]);
 
   return (
     <div className="min-w-[300px] h-96 md:h-full flex-1 border-2 border-white rounded-lg">
