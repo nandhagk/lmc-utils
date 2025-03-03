@@ -164,7 +164,9 @@
       for (const [variable, rules] of grammar.entries())
         grammar.set(
           variable,
-          rules.map((rule) => rule.map((sym) => (variables.has(sym) || terminalCache.get(sym) === variable ? sym : terminalCache.get(sym)!)))
+          rules.map((rule) =>
+            rule.length === 1 ? rule : rule.map((sym) => (variables.has(sym) || terminalCache.get(sym) === variable ? sym : terminalCache.get(sym)!))
+          )
         );
 
       for (const [variable, rules] of [...grammar.entries()]) {
