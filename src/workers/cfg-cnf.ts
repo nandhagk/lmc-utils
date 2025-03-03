@@ -135,28 +135,34 @@
               }
       }
 
+      for (const variable of [...variables]) {
+        if (!reachable.has(variable)) {
+          variables.delete(variable);
+          grammar.delete(variable);
+        }
+      }
+
       for (const [variable, rules] of grammar.entries())
         grammar.set(
           variable,
           rules.filter((rule) => rule.every((sym) => reachable.has(sym)))
         );
 
-      const terminalCache = new Map<string, string>();
+      const cache = new Map<string, string>();
 
       for (const [variable, rules] of grammar.entries())
-        if (rules.length === 1 && rules[0].length === 1 && !variables.has(rules[0][0]) && !terminalCache.has(rules[0][0]))
-          terminalCache.set(rules[0][0], variable);
+        if (rules.length === 1 && rules[0].length === 1 && !variables.has(rules[0][0]) && !cache.has(rules[0][0])) cache.set(rules[0][0], variable);
 
       let terminalIndex = 0;
       for (const rules of [...grammar.values()]) {
         for (const rule of rules) {
           if (isEpsilonRule(rule)) continue;
           for (const sym of rule)
-            if (!variables.has(sym) && !terminalCache.has(sym)) {
+            if (!variables.has(sym) && !cache.has(sym)) {
               const terminalVariable = `U${++terminalIndex}`;
               grammar.set(terminalVariable, [[sym]]);
               variables.add(terminalVariable);
-              terminalCache.set(sym, terminalVariable);
+              cache.set(sym, terminalVariable);
             }
         }
       }
@@ -165,12 +171,13 @@
         grammar.set(
           variable,
           rules.map((rule) =>
-            rule.length === 1 ? rule : rule.map((sym) => (variables.has(sym) || terminalCache.get(sym) === variable ? sym : terminalCache.get(sym)!))
+            rule.length === 1 ? rule : rule.map((sym) => (variables.has(sym) || cache.get(sym) === variable ? sym : cache.get(sym)!))
           )
         );
 
-      for (const [variable, rules] of [...grammar.entries()]) {
-        const newRules = [];
+      for (const variable of [...variables].toReversed()) {
+        const rules = [...grammar.get(variable)!];
+        const newRules: string[][] = [];
 
         let helperIndex = 0;
         for (const rule of rules) {
@@ -179,21 +186,38 @@
             continue;
           }
 
-          newRules.push([rule[0], `${variable}${++helperIndex}`]);
-
-          for (let i = 1; i <= rule.length - 3; ++i, ++helperIndex) {
-            variables.add(`${variable}${helperIndex}`);
-            grammar.set(`${variable}${helperIndex}`, [[rule[i + 1], `${variable}${helperIndex + 1}`]]);
+          const hash = hashRule(rule.slice(1));
+          if (cache.has(hash)) {
+            newRules.push([rule[0], cache.get(hash)!]);
+            continue;
           }
 
-          variables.add(`${variable}${helperIndex}`);
-          grammar.set(`${variable}${helperIndex}`, [[rule[rule.length - 2], rule[rule.length - 1]]]);
+          let prvVariable = `${variable}${++helperIndex}`;
+          variables.add(prvVariable);
+          newRules.push([rule[0], prvVariable]);
+          cache.set(hash, prvVariable);
+          for (let i = 1; i < rule.length - 1; ++i) {
+            if (i === rule.length - 2) {
+              grammar.set(prvVariable, [[rule[i], rule[i + 1]]]);
+              break;
+            }
+
+            const hash = hashRule(rule.slice(i + 1));
+            if (cache.has(hash)) {
+              grammar.set(prvVariable, [[rule[i], cache.get(hash)!]]);
+              break;
+            } else {
+              const newVariable = `${variable}${++helperIndex}`;
+              variables.add(newVariable);
+              grammar.set(prvVariable, [[rule[i], newVariable]]);
+              cache.set(hash, newVariable);
+              prvVariable = newVariable;
+            }
+          }
         }
 
         grammar.set(variable, newRules);
       }
-
-      console.log(grammar);
 
       self.postMessage({
         success: true,
