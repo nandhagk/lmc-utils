@@ -1,249 +1,210 @@
 (async () => {
   const [{ EPSILON }] = await Promise.all([import("@/finite-automata/tokenizer")]);
+
   const hashRule = (rule: string[]) => rule.join(" ");
-  const areRulesEqual = (r1: string[], r2: string[]) => hashRule(r1) === hashRule(r2);
+  const unHashRule = (hash: string) => hash.split(" ");
+  const uniqueRules = (rules: string[][]) =>
+    [...new Set(rules.map((rule) => hashRule(rule)))].map((hash) => unHashRule(hash)).filter((rule) => rule.length !== 0);
+
+  const isEpsilonRule = (rule: string[]) => rule.length === 1 && rule[0] === EPSILON;
 
   const parseCFG = (cfg: string) => {
-    return cfg
-      .split("\n")
-      .map((rule) => rule.split("->"))
-      .map(([variable, subs]) => [
-        variable.trim(),
-        [
-          ...new Set(
-            subs.split("|").map((sub) =>
-              hashRule(
+    return new Map(
+      cfg
+        .split("\n")
+        .map((rule) => rule.split("->"))
+        .map(
+          ([variable, subs]) =>
+            [
+              variable.trim(),
+              subs.split("|").map((sub) =>
                 sub
                   .trim()
                   .split(" ")
                   .map((sym) => (sym === "~" ? EPSILON : sym))
-              )
-            )
-          ),
-        ].map((sub) => sub.split(" ")),
-      ]) as [string, string[][]][];
-  };
-
-  const removeEpsilonRule = (variables: string[], grammar: Map<string, string[][]>, epsilonVariable: string) => {
-    for (const variable of variables) {
-      const newRules: string[][] = [];
-
-      const rules = grammar.get(variable)!;
-      for (const rule of rules) {
-        const idxs = new Map(
-          rule
-            .map((v, i) => [v, i] as [string, number])
-            .filter(([v]) => v === epsilonVariable)
-            .map(([, i], j) => [i, j])
-        );
-
-        if (idxs.size === 0) continue;
-
-        for (let k = 1n << BigInt(idxs.size); k >= 0n; --k) {
-          const newRule = rule.filter((v, i) => v !== epsilonVariable || (k >> BigInt(idxs.get(i)!)) & 1n);
-          if (newRule.length === 0) {
-            if (variable === epsilonVariable) continue;
-            newRule.push(EPSILON);
-          }
-
-          if (newRules.some((rule) => areRulesEqual(rule, newRule))) continue;
-          newRules.push(newRule);
-        }
-      }
-
-      for (const newRule of newRules) {
-        if (rules.some((rule) => areRulesEqual(rule, newRule))) continue;
-        rules.push(newRule);
-      }
-    }
-  };
-
-  const removeEpsilonRules = (variables: string[], grammar: Map<string, string[][]>) => {
-    let hasEpsilonRule = true;
-    while (hasEpsilonRule) {
-      hasEpsilonRule = false;
-
-      for (const variable of variables.toReversed()) {
-        if (variable === variables[0]) continue;
-
-        const rules = grammar.get(variable)!;
-        for (let j = 0; j < rules.length; ++j) {
-          const rule = rules[j];
-          if (rule.length !== 1 || rule[0] !== EPSILON) continue;
-
-          rules.splice(j, 1);
-          --j;
-
-          removeEpsilonRule(variables, grammar, variable);
-          hasEpsilonRule = true;
-        }
-      }
-    }
-  };
-
-  const removeUnitRules = (variables: string[], grammar: Map<string, string[][]>) => {
-    let hasUnitRule = true;
-    while (hasUnitRule) {
-      hasUnitRule = false;
-
-      for (const variable of variables.toReversed()) {
-        const rules = grammar.get(variable)!;
-        for (let j = 0; j < rules.length; ++j) {
-          const rule = rules[j];
-          if (rule.length !== 1 || variables.indexOf(rule[0]) === -1) continue;
-
-          const unitVariable = rule[0];
-
-          rules.splice(j, 1);
-          for (const newRule of grammar.get(unitVariable)!) {
-            if (unitVariable === variable || rules.some((rule) => areRulesEqual(rule, newRule))) continue;
-            rules.push(newRule);
-          }
-
-          hasUnitRule = true;
-        }
-      }
-    }
-  };
-
-  const convertToProperForm = (variables: string[], grammar: Map<string, string[][]>) => {
-    const terminalMap = new Map<string, string>();
-    const rulesMap = new Map<string, string>();
-
-    for (const variable of variables) {
-      const rules = grammar.get(variable)!;
-      if (rules.length !== 1 || rules[0].length !== 1) continue;
-
-      const terminal = rules[0][0];
-      if (grammar.has(terminal)) throw new Error("HOW");
-
-      if (!terminalMap.has(terminal)) terminalMap.set(terminal, variable);
-    }
-
-    let terminalIndex = 0;
-    for (const variable of variables.toReversed()) {
-      const rules = grammar.get(variable)!;
-      for (const rule of rules) {
-        if (rule.length < 2) continue;
-
-        for (let i = 0; i < rule.length; ++i) {
-          if (grammar.has(rule[i])) continue;
-
-          if (!terminalMap.has(rule[i])) {
-            const terminalVariable = `U${++terminalIndex}`;
-            variables.push(terminalVariable);
-            grammar.set(terminalVariable, [[rule[i]]]);
-            terminalMap.set(rule[i], terminalVariable);
-          }
-
-          rule[i] = terminalMap.get(rule[i])!;
-        }
-      }
-    }
-
-    for (const variable of variables) {
-      const rules = grammar.get(variable)!;
-      if (rules.length !== 1) continue;
-
-      const rule = hashRule(rules[0]);
-      if (!rulesMap.has(rule)) rulesMap.set(rule, variable);
-    }
-
-    for (const variable of variables.toReversed()) {
-      const rules = grammar.get(variable)!;
-
-      const newGrammar = new Map<string, string[][]>();
-
-      let variableIndex = 0;
-      for (const rule of rules) {
-        if (rule.length < 2) {
-          if (!newGrammar.has(variable)) newGrammar.set(variable, []);
-          newGrammar.get(variable)!.push(rule);
-
-          continue;
-        }
-
-        let prevVariable = variable;
-        for (let i = 0; i < rule.length - 1; ++i) {
-          const other = rule.slice(i + 1);
-          const hash = hashRule(other);
-
-          if (i === rule.length - 2) {
-            if (!newGrammar.has(prevVariable)) newGrammar.set(prevVariable, []);
-            newGrammar.get(prevVariable)!.push([rule[i], rule[i + 1]]);
-
-            break;
-          }
-
-          if (rulesMap.has(hash)) {
-            if (!newGrammar.has(prevVariable)) newGrammar.set(prevVariable, []);
-            newGrammar.get(prevVariable)!.push([rule[i], rulesMap.get(hash)!]);
-
-            break;
-          }
-
-          const nextVariable = `${variable}${++variableIndex}`;
-
-          variables.push(nextVariable);
-          rulesMap.set(hash, nextVariable);
-
-          if (!newGrammar.has(prevVariable)) newGrammar.set(prevVariable, []);
-          newGrammar.get(prevVariable)!.push([rule[i], rulesMap.get(hash)!]);
-
-          prevVariable = nextVariable;
-        }
-      }
-
-      for (const [k, v] of newGrammar.entries()) grammar.set(k, v);
-    }
+              ),
+            ] as [string, string[][]]
+        )
+    );
   };
 
   self.onmessage = (e: MessageEvent<{ cfg: string }>) => {
     const { cfg } = e.data;
 
     try {
-      const parsed = parseCFG(cfg);
-      parsed.splice(0, 0, ["S0", [[parsed[0][0]]]]);
+      const grammar = parseCFG(cfg);
+      for (const [variable, rules] of grammar.entries()) grammar.set(variable, uniqueRules(rules));
 
-      const variables = parsed.map(([variable]) => variable);
-      const grammar = new Map(parsed);
+      if (grammar.size === 0) {
+        self.postMessage({ success: true, cnf: "" });
+        return;
+      }
 
-      removeEpsilonRules(variables, grammar);
-      removeUnitRules(variables, grammar);
-      convertToProperForm(variables, grammar);
+      const start = "S0";
+      const variables = new Set([start, ...grammar.keys()]);
 
-      const stk = [variables[0]];
-      const reachable = new Set(stk);
+      grammar.set(start, [[grammar.keys().next().value!]]);
 
-      while (stk.length !== 0) {
-        const variable = stk.pop()!;
-        const rules = grammar.get(variable)!;
+      const hasRemovedEpsilonRule = new Set<string>();
 
-        for (const rule of rules) {
-          for (const sym of rule) {
-            if (!grammar.has(sym)) continue;
+      let entry: [string, string[][]] | null = null;
+      while ((entry = grammar.entries().find(([variable, rules]) => variable !== start && rules.find((rule) => isEpsilonRule(rule))) ?? null)) {
+        const [epsilonVariable, rules] = entry;
 
-            if (!reachable.has(sym)) {
-              reachable.add(sym);
-              stk.push(sym);
-            }
-          }
+        grammar.set(
+          epsilonVariable,
+          rules.filter((rule) => !isEpsilonRule(rule))
+        );
+
+        hasRemovedEpsilonRule.add(epsilonVariable);
+
+        for (const [variable, rules] of grammar.entries())
+          grammar.set(
+            variable,
+            uniqueRules(
+              rules.flatMap((rule) =>
+                rule
+                  .map((sym, i) => [sym, i] as [string, number])
+                  .filter(([sym]) => sym === epsilonVariable)
+                  .map(([, i]) => i)
+                  .reduce((subsets, value) => subsets.concat(subsets.map((set) => new Set([value, ...set]))), [new Set<number>()])
+                  .map((positions) => rule.filter((sym, i) => sym !== epsilonVariable || positions.has(i)))
+                  .map((rule) => (rule.length === 0 ? [EPSILON] : rule))
+              )
+            ).filter((rule) => !isEpsilonRule(rule) || !hasRemovedEpsilonRule.has(variable))
+          );
+      }
+
+      const isUnitRule = (variables: Set<string>, rule: string[]) => rule.length === 1 && variables.has(rule[0]);
+
+      const hasRemovedUnitRule = new Map<string, Set<string>>(grammar.keys().map((variable) => [variable, new Set()]));
+      while ((entry = grammar.entries().find(([, rules]) => rules.find((rule) => isUnitRule(variables, rule))) ?? null)) {
+        const [variable, rules] = entry;
+        const [unit] = rules.find((rule) => isUnitRule(variables, rule))!;
+
+        grammar.set(
+          variable,
+          uniqueRules([
+            ...rules.filter((rule) => hashRule(rule) !== unit),
+            ...(hasRemovedUnitRule.get(variable)!.has(unit) ? [] : grammar.get(unit)!),
+          ])
+        );
+
+        hasRemovedUnitRule.get(variable)!.add(unit);
+      }
+
+      const generating = new Set(grammar.values().flatMap((rules) => rules.flatMap((rule) => rule.filter((sym) => !variables.has(sym)))));
+
+      while (
+        (entry =
+          grammar
+            .entries()
+            .find(
+              ([variable, rules]) => !generating.has(variable) && rules.find((rule) => isEpsilonRule(rule) || new Set(rule).isSubsetOf(generating))
+            ) ?? null)
+      ) {
+        const [variable] = entry;
+        generating.add(variable);
+      }
+
+      for (const variable of [...variables]) {
+        if (!generating.has(variable)) {
+          variables.delete(variable);
+          grammar.delete(variable);
         }
       }
 
+      for (const [variable, rules] of grammar.entries())
+        grammar.set(
+          variable,
+          rules.filter((rule) => rule.every((sym) => generating.has(sym)))
+        );
+
+      const reachable = new Set<string>([start]);
+      const stk = [start];
+
+      while (stk.length !== 0) {
+        const variable = stk.pop()!;
+
+        for (const rules of grammar.get(variable) ?? [])
+          for (const rule of rules)
+            for (const sym of rule)
+              if (!reachable.has(sym)) {
+                reachable.add(sym);
+                if (variables.has(sym)) stk.push(sym);
+              }
+      }
+
+      for (const [variable, rules] of grammar.entries())
+        grammar.set(
+          variable,
+          rules.filter((rule) => rule.every((sym) => reachable.has(sym)))
+        );
+
+      const terminalCache = new Map<string, string>();
+
+      for (const [variable, rules] of grammar.entries())
+        if (rules.length === 1 && rules[0].length === 1 && !variables.has(rules[0][0]) && !terminalCache.has(rules[0][0]))
+          terminalCache.set(rules[0][0], variable);
+
+      let terminalIndex = 0;
+      for (const rules of [...grammar.values()]) {
+        for (const rule of rules) {
+          if (isEpsilonRule(rule)) continue;
+          for (const sym of rule)
+            if (!variables.has(sym) && !terminalCache.has(sym)) {
+              const terminalVariable = `U${++terminalIndex}`;
+              grammar.set(terminalVariable, [[sym]]);
+              variables.add(terminalVariable);
+              terminalCache.set(sym, terminalVariable);
+            }
+        }
+      }
+
+      for (const [variable, rules] of grammar.entries())
+        grammar.set(
+          variable,
+          rules.map((rule) => rule.map((sym) => (variables.has(sym) || terminalCache.get(sym) === variable ? sym : terminalCache.get(sym)!)))
+        );
+
+      for (const [variable, rules] of [...grammar.entries()]) {
+        const newRules = [];
+
+        let helperIndex = 0;
+        for (const rule of rules) {
+          if (rule.length <= 2) {
+            newRules.push(rule);
+            continue;
+          }
+
+          newRules.push([rule[0], `${variable}${++helperIndex}`]);
+
+          for (let i = 1; i <= rule.length - 3; ++i, ++helperIndex) {
+            variables.add(`${variable}${helperIndex}`);
+            grammar.set(`${variable}${helperIndex}`, [[rule[i + 1], `${variable}${helperIndex + 1}`]]);
+          }
+
+          variables.add(`${variable}${helperIndex}`);
+          grammar.set(`${variable}${helperIndex}`, [[rule[rule.length - 2], rule[rule.length - 1]]]);
+        }
+
+        grammar.set(variable, newRules);
+      }
+
+      console.log(grammar);
+
       self.postMessage({
         success: true,
-        cnf: variables
-          .filter((v) => reachable.has(v))
-          .map(
+        cnf: [
+          ...variables.values().map(
             (v) =>
               `${v}\t-> ${grammar
                 .get(v)!
                 .toSorted()
                 .map((r) => r.join(" "))
                 .join(" | ")}`
-          )
-          .join("\n"),
+          ),
+        ].join("\n"),
       });
     } catch {
       self.postMessage({ success: false });
