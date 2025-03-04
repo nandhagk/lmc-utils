@@ -93,61 +93,6 @@
         hasRemovedUnitRule.get(variable)!.add(unit);
       }
 
-      const generating = new Set(grammar.values().flatMap((rules) => rules.flatMap((rule) => rule.filter((sym) => !variables.has(sym)))));
-
-      while (
-        (entry =
-          grammar
-            .entries()
-            .find(
-              ([variable, rules]) => !generating.has(variable) && rules.find((rule) => isEpsilonRule(rule) || new Set(rule).isSubsetOf(generating))
-            ) ?? null)
-      ) {
-        const [variable] = entry;
-        generating.add(variable);
-      }
-
-      for (const variable of [...variables]) {
-        if (!generating.has(variable)) {
-          variables.delete(variable);
-          grammar.delete(variable);
-        }
-      }
-
-      for (const [variable, rules] of grammar.entries())
-        grammar.set(
-          variable,
-          rules.filter((rule) => rule.every((sym) => generating.has(sym)))
-        );
-
-      const reachable = new Set<string>([start]);
-      const stk = [start];
-
-      while (stk.length !== 0) {
-        const variable = stk.pop()!;
-
-        for (const rules of grammar.get(variable) ?? [])
-          for (const rule of rules)
-            for (const sym of rule)
-              if (!reachable.has(sym)) {
-                reachable.add(sym);
-                if (variables.has(sym)) stk.push(sym);
-              }
-      }
-
-      for (const variable of [...variables]) {
-        if (!reachable.has(variable)) {
-          variables.delete(variable);
-          grammar.delete(variable);
-        }
-      }
-
-      for (const [variable, rules] of grammar.entries())
-        grammar.set(
-          variable,
-          rules.filter((rule) => rule.every((sym) => reachable.has(sym)))
-        );
-
       const cache = new Map<string, string>();
 
       for (const [variable, rules] of grammar.entries())
@@ -219,22 +164,22 @@
         grammar.set(variable, newRules);
       }
 
-      const generating2 = new Set(grammar.values().flatMap((rules) => rules.flatMap((rule) => rule.filter((sym) => !variables.has(sym)))));
+      const generating = new Set(grammar.values().flatMap((rules) => rules.flatMap((rule) => rule.filter((sym) => !variables.has(sym)))));
 
       while (
         (entry =
           grammar
             .entries()
             .find(
-              ([variable, rules]) => !generating2.has(variable) && rules.find((rule) => isEpsilonRule(rule) || new Set(rule).isSubsetOf(generating2))
+              ([variable, rules]) => !generating.has(variable) && rules.find((rule) => isEpsilonRule(rule) || new Set(rule).isSubsetOf(generating))
             ) ?? null)
       ) {
         const [variable] = entry;
-        generating2.add(variable);
+        generating.add(variable);
       }
 
       for (const variable of [...variables]) {
-        if (!generating2.has(variable)) {
+        if (!generating.has(variable)) {
           variables.delete(variable);
           grammar.delete(variable);
         }
@@ -243,26 +188,25 @@
       for (const [variable, rules] of grammar.entries())
         grammar.set(
           variable,
-          rules.filter((rule) => rule.every((sym) => generating2.has(sym)))
+          rules.filter((rule) => rule.every((sym) => generating.has(sym)))
         );
 
-      const reachable2 = new Set<string>([start]);
-      const stk2 = [start];
+      const reachable = new Set<string>([start]);
+      const stk = [start];
 
-      while (stk2.length !== 0) {
-        const variable = stk2.pop()!;
+      while (stk.length !== 0) {
+        const variable = stk.pop()!;
 
-        for (const rules of grammar.get(variable) ?? [])
-          for (const rule of rules)
-            for (const sym of rule)
-              if (!reachable2.has(sym)) {
-                reachable2.add(sym);
-                if (variables.has(sym)) stk2.push(sym);
-              }
+        for (const rule of grammar.get(variable) ?? [])
+          for (const sym of rule)
+            if (!reachable.has(sym)) {
+              reachable.add(sym);
+              if (variables.has(sym)) stk.push(sym);
+            }
       }
 
       for (const variable of [...variables]) {
-        if (!reachable2.has(variable)) {
+        if (!reachable.has(variable)) {
           variables.delete(variable);
           grammar.delete(variable);
         }
@@ -271,7 +215,7 @@
       for (const [variable, rules] of grammar.entries())
         grammar.set(
           variable,
-          rules.filter((rule) => rule.every((sym) => reachable2.has(sym)))
+          rules.filter((rule) => rule.every((sym) => reachable.has(sym)))
         );
 
       self.postMessage({
