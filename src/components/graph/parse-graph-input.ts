@@ -41,7 +41,7 @@ export function parseGraphInputEdges(roots: string, input: string, testCaseNumbe
     .map((s) => {
       const sTrimmed = s.trim().split(/\s+/);
       const leet = parseLeetcodeStyle(sTrimmed[0]);
-      if (sTrimmed.length == 1 && leet.status === "ok") {
+      if (sTrimmed.length === 1 && leet.status === "ok") {
         for (const l of leet.edges) {
           leetcodes.push(l);
         }
@@ -75,7 +75,7 @@ export function parseGraphInputEdges(roots: string, input: string, testCaseNumbe
     });
 
   for (const e of raw) {
-    if (e.length == 1) {
+    if (e.length === 1) {
       const pu = padNode(e[0], testCaseNumber);
       if (!nodes.includes(pu)) {
         nodes.push(pu);

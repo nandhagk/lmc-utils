@@ -17,13 +17,13 @@ export function drawLine(ctx: CanvasRenderingContext2D, u: Vector2D, v: Vector2D
 
   ctx.beginPath();
 
-  if (u.x == v.x && u.y === v.y) {
+  if (u.x === v.x && u.y === v.y) {
     ctx.arc(u.x, u.y - 25, 25, 0, 2 * Math.PI);
   } else {
     let px = u.y - v.y;
     let py = v.x - u.x;
 
-    const toFlip = r % 2 == 0;
+    const toFlip = r % 2 === 0;
 
     px *= 0.4 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
     py *= 0.4 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
@@ -51,7 +51,7 @@ export function drawArrow(
   let px = u.y - v.y;
   let py = v.x - u.x;
 
-  const toFlip = r % 2 == 0;
+  const toFlip = r % 2 === 0;
 
   px *= 0.3 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
   py *= 0.3 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
@@ -91,9 +91,9 @@ export function drawEdgeLabel(
   let px = u.y - v.y;
   let py = v.x - u.x;
 
-  const toFlip = r % 2 == 0;
-  const bx = px / euclidDist(u, v),
-    by = py / euclidDist(u, v);
+  const toFlip = r % 2 === 0;
+  const bx = px / euclidDist(u, v);
+  const by = py / euclidDist(u, v);
 
   px *= 0.295 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);
   py *= 0.295 * (toFlip ? -1 : 1) * Math.floor((r + 1) / 2);

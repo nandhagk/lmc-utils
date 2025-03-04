@@ -42,9 +42,12 @@ export function RegexEq() {
       } else {
         const { d1, d2 } = e.data;
 
-        setM1(DFA.findMatch(d1));
-        setM2(DFA.findMatch(d2));
-        setEQ(d1.F.size === 0 && d2.F.size == 0);
+        const m1 = DFA.findMatch(d1);
+        const m2 = DFA.findMatch(d2);
+
+        setM1(m1);
+        setM2(m2);
+        setEQ(m1 === null && m2 === null);
 
         setIsLoading(false);
       }
@@ -61,12 +64,12 @@ export function RegexEq() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
+  const onSubmit = (data: z.infer<typeof FormSchema>) => {
     setIsLoading(true);
     setIsOpen(true);
 
     worker?.postMessage(data);
-  }
+  };
 
   return (
     <>

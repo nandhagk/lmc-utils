@@ -52,12 +52,12 @@ export function CFGCNF() {
     return () => worker.terminate();
   }, []);
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
+  const onSubmit = (data: z.infer<typeof FormSchema>) => {
     setIsLoading(true);
     setIsOpen(true);
 
     worker?.postMessage(data);
-  }
+  };
 
   return (
     <>

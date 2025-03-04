@@ -63,12 +63,12 @@ export function NFARegex() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
+  const onSubmit = (data: z.infer<typeof FormSchema>) => {
     setIsLoading(true);
     setIsOpen(true);
 
     worker?.postMessage(data);
-  }
+  };
 
   return (
     <>
