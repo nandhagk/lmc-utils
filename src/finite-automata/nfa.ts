@@ -1,6 +1,6 @@
 import { DFA } from "@/finite-automata/dfa";
+import { EPSILON, Lexer } from "@/finite-automata/lexer";
 import { NFAVisitor, Parser } from "@/finite-automata/parser";
-import { EPSILON, Tokenizer } from "@/finite-automata/tokenizer";
 
 export class NFA {
   constructor(
@@ -160,8 +160,8 @@ export class NFA {
   }
 
   static fromRegularExpression(A: Set<string>, text: string) {
-    const tokenizer = new Tokenizer(text);
-    const tokens = tokenizer.tokenize();
+    const tokenizer = new Lexer(text);
+    const tokens = tokenizer.lex();
 
     if (tokens.length === 1) return this.empty(A); // Empty string
 

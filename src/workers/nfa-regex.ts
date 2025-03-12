@@ -1,16 +1,15 @@
 (async () => {
-  const [{ DFA }, { NFA }, { GNFA }, { EPSILON }] = await Promise.all([
+  const [{ DFA }, { NFA }, { GNFA }, { EPSILON, ALT_EPSILON }] = await Promise.all([
     import("@/finite-automata/dfa"),
     import("@/finite-automata/nfa"),
     import("@/finite-automata/gnfa"),
-    import("@/finite-automata/tokenizer"),
+    import("@/finite-automata/lexer"),
   ]);
 
   self.onmessage = (e: MessageEvent<{ alphabet: string; start: string; accept: string; nfa: string }>) => {
     const { alphabet, start, accept, nfa } = e.data;
 
     const M = new Map<string, number>();
-
     const A = new Set(alphabet.split(","));
 
     const S = NFA.id;
@@ -44,7 +43,7 @@
       for (const b of a
         .split(",")
         .map((c) => c.trim())
-        .map((c) => (c === "~" ? EPSILON : c))) {
+        .map((c) => (c === ALT_EPSILON ? EPSILON : c))) {
         if (!D.get(x)!.has(b)) D.get(x)!.set(b, new Set());
         D.get(x)!.get(b)!.add(y);
       }

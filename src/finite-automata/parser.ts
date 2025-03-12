@@ -1,5 +1,5 @@
+import { EPSILON, Token, TokenType } from "@/finite-automata/lexer";
 import { NFA } from "@/finite-automata/nfa";
-import { EPSILON, Token, TokenType } from "@/finite-automata/tokenizer";
 
 abstract class Expression {
   abstract visitNFA(A: Set<string>, visitor: NFAVisitor): NFA;
