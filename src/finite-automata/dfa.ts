@@ -1,10 +1,15 @@
 import { EPSILON } from "@/finite-automata/lexer";
 import { NFA } from "@/finite-automata/nfa";
-
-const setToBigInt = (s: Set<number>) => [...s].reduce((acc, cur) => (acc |= 1n << BigInt(cur)), 0n);
+import { DefaultHashMap, HashMap, HashSet } from "@/lib/hash-map";
 
 class NDFA {
-  constructor(public Q: Set<bigint>, public A: Set<string>, public S: bigint, public D: Map<bigint, Map<string, bigint>>, public F: Set<bigint>) {}
+  constructor(
+    public Q: HashSet<HashSet<number>>,
+    public A: HashSet<string>,
+    public S: HashSet<number>,
+    public D: HashMap<[HashSet<number>, string], HashSet<number>>,
+    public F: HashSet<HashSet<number>>
+  ) {}
 
   static fromNFA(n: NFA) {
     const P = n.Q;
@@ -13,15 +18,14 @@ class NDFA {
     const A = n.A;
     const C = n.D;
 
-    const ER = new Map<number, Set<number>>(P.values().map((r) => [r, new Set([r])]));
+    const ER = new HashMap<number, HashSet<number>>(P.values().map((r) => [r, new HashSet([r])]));
+
     for (const q of P) {
       const stk = [q];
 
       while (stk.length > 0) {
         const r = stk.pop()!;
-        if (!C.has(r) || !C.get(r)!.has(EPSILON)) continue;
-
-        for (const s of C.get(r)!.get(EPSILON)!) {
+        for (const s of C.get([r, EPSILON])) {
           if (ER.get(q)!.has(s)) continue;
 
           ER.get(q)!.add(s);
@@ -30,84 +34,83 @@ class NDFA {
       }
     }
 
-    const Q = new Set<bigint>();
-    const D = new Map<bigint, Map<string, bigint>>();
+    const Q = new HashSet<HashSet<number>>();
+    const D = new HashMap<[HashSet<number>, string], HashSet<number>>();
 
-    const T = ER.get(R)!;
-    const S = setToBigInt(T);
+    const S = ER.get(R)!;
 
     Q.add(S);
-    const stk = [T];
+    const stk = [S];
 
     while (stk.length > 0) {
       const q = stk.pop()!;
-      const h = setToBigInt(q);
 
-      const G = new Map<string, Set<number>>(A.values().map((a) => [a, new Set()]));
-      for (const sym of A) {
-        for (const r of q) {
-          if (!C.has(r) || !C.get(r)!.has(sym)) continue;
-          for (const s of C.get(r)!.get(sym)!) {
-            G.set(sym, G.get(sym)!.union(ER.get(s)!));
+      const G = new DefaultHashMap<[HashSet<number>, string], HashSet<number>>(() => new HashSet<number>());
+      for (const r of q) {
+        for (const sym of A) {
+          for (const s of C.get([r, sym])) {
+            G.set([q, sym], G.get([q, sym]).union(ER.get(s)!));
           }
         }
       }
 
-      D.set(h, new Map(G.entries().map(([k, v]) => [k, setToBigInt(v)])));
-      for (const s of G.values()) {
-        const h = setToBigInt(s);
-        if (Q.has(h)) continue;
+      for (const [k, s] of G.entries()) {
+        D.set(k, s);
+        if (Q.has(s)) continue;
 
-        Q.add(h);
+        Q.add(s);
         stk.push(s);
       }
     }
 
-    const X = E.values().reduce((acc, cur) => acc.union(ER.get(cur)!), new Set<number>());
-    const Y = setToBigInt(X);
+    const Y = E.values().reduce((acc, cur) => acc.union(ER.get(cur)!), new HashSet<number>());
+    const F = new HashSet(Q.values().filter((q) => !Y.isDisjointFrom(q)));
 
-    const F = new Set(Q.values().filter((q) => (q & Y) != 0n));
     return new NDFA(Q, A, S, D, F);
   }
 }
 
 export class DFA {
-  constructor(public Q: Set<number>, public A: Set<string>, public S: number, public D: Map<number, Map<string, number>>, public F: Set<number>) {}
+  constructor(
+    public Q: HashSet<number>,
+    public A: HashSet<string>,
+    public S: number,
+    public D: HashMap<[number, string], number>,
+    public F: HashSet<number>
+  ) {}
 
   static fromNFA(n: NFA) {
     let id = 0;
 
     const nd = NDFA.fromNFA(n);
+
     const P = nd.Q;
     const E = nd.F;
     const R = nd.S;
     const C = nd.D;
     const A = nd.A;
 
-    const M = new Map<bigint, number>();
+    const M = new HashMap<HashSet<number>, number>();
     for (const p of P) M.set(p, id++);
 
-    const Q = new Set(P.values().map((p) => M.get(p)!));
+    const Q = new HashSet(P.values().map((p) => M.get(p)!));
     const S = M.get(R)!;
-    const D = new Map(C.entries().map(([k, v]) => [M.get(k)!, new Map(v.entries().map(([x, y]) => [x, M.get(y)!]))]));
-    const F = new Set(E.values().map((e) => M.get(e)!));
+    const D = new HashMap<[number, string], number>(C.entries().map(([[k, x], v]) => [[M.get(k)!, x], M.get(v)!]));
+    const F = new HashSet(E.values().map((e) => M.get(e)!));
 
     return new DFA(Q, A, S, D, F);
   }
 
-  static findMatch(d: DFA) {
-    const S = d.S;
-    const F = d.F;
-    const D = d.D;
+  public findMatch() {
+    const match = new HashMap<number, string>([[this.S, ""]]);
 
-    const match = new Map<number, string>([[S, ""]]);
-
-    const stk = [S];
+    const stk = [this.S];
     while (stk.length > 0) {
       const T = stk.pop()!;
 
       const pref = match.get(T)!;
-      for (const [sym, state] of D.get(T)!) {
+      for (const sym of this.A) {
+        const state = this.D.get([T, sym])!;
         if (match.has(state)) continue;
 
         match.set(state, pref + sym);
@@ -115,7 +118,9 @@ export class DFA {
       }
     }
 
-    for (const f of F) if (match.has(f)) return match.get(f)!;
+    for (const f of this.F) {
+      if (match.has(f)) return match.get(f)!;
+    }
 
     return null;
   }

@@ -1,37 +1,38 @@
 import { EPSILON, Token, TokenType } from "@/finite-automata/lexer";
 import { NFA } from "@/finite-automata/nfa";
+import { HashSet } from "@/lib/hash-map";
 
 abstract class Expression {
-  abstract visitNFA(A: Set<string>, visitor: NFAVisitor): NFA;
+  abstract visitNFA(A: HashSet<string>, visitor: NFAVisitor): NFA;
   abstract visitPrinter(printer: ASTPrinter): string;
 }
 
 export class NFAVisitor {
-  public visitLiteral(A: Set<string>, sym: string) {
+  public visitLiteral(A: HashSet<string>, sym: string) {
     return NFA.literal(A, sym);
   }
 
-  public visitConcatenate(A: Set<string>, left: Expression, right: Expression) {
+  public visitConcatenate(A: HashSet<string>, left: Expression, right: Expression) {
     return NFA.concatenate(left.visitNFA(A, this), right.visitNFA(A, this));
   }
 
-  public visitUnion(A: Set<string>, left: Expression, right: Expression) {
+  public visitUnion(A: HashSet<string>, left: Expression, right: Expression) {
     return NFA.union(left.visitNFA(A, this), right.visitNFA(A, this));
   }
 
-  public visitOption(A: Set<string>, expr: Expression) {
+  public visitOption(A: HashSet<string>, expr: Expression) {
     return NFA.union(expr.visitNFA(A, this), EPSILON_EXPRESSION.visitNFA(A, this));
   }
 
-  public visitStar(A: Set<string>, expr: Expression) {
+  public visitStar(A: HashSet<string>, expr: Expression) {
     return NFA.star(expr.visitNFA(A, this));
   }
 
-  public visitPlus(A: Set<string>, expr: Expression) {
+  public visitPlus(A: HashSet<string>, expr: Expression) {
     return NFA.concatenate(expr.visitNFA(A, this), NFA.star(expr.visitNFA(A, this)));
   }
 
-  public visitGrouping(A: Set<string>, expr: Expression) {
+  public visitGrouping(A: HashSet<string>, expr: Expression) {
     return expr.visitNFA(A, this);
   }
 }
@@ -71,7 +72,7 @@ class LiteralExpression extends Expression {
     super();
   }
 
-  public visitNFA(A: Set<string>, visitor: NFAVisitor) {
+  public visitNFA(A: HashSet<string>, visitor: NFAVisitor) {
     return visitor.visitLiteral(A, this.literal.lexeme);
   }
 
@@ -87,7 +88,7 @@ class ConcatenateExpression extends Expression {
     super();
   }
 
-  public visitNFA(A: Set<string>, visitor: NFAVisitor) {
+  public visitNFA(A: HashSet<string>, visitor: NFAVisitor) {
     return visitor.visitConcatenate(A, this.left, this.right);
   }
 
@@ -101,7 +102,7 @@ class UnionExpression extends Expression {
     super();
   }
 
-  public visitNFA(A: Set<string>, visitor: NFAVisitor) {
+  public visitNFA(A: HashSet<string>, visitor: NFAVisitor) {
     return visitor.visitUnion(A, this.left, this.right);
   }
 
@@ -115,7 +116,7 @@ class OptionExpression extends Expression {
     super();
   }
 
-  public visitNFA(A: Set<string>, visitor: NFAVisitor) {
+  public visitNFA(A: HashSet<string>, visitor: NFAVisitor) {
     return visitor.visitOption(A, this.expr);
   }
 
@@ -129,7 +130,7 @@ class StarExpression extends Expression {
     super();
   }
 
-  public visitNFA(A: Set<string>, visitor: NFAVisitor) {
+  public visitNFA(A: HashSet<string>, visitor: NFAVisitor) {
     return visitor.visitStar(A, this.expr);
   }
 
@@ -143,7 +144,7 @@ class PlusExpression extends Expression {
     super();
   }
 
-  public visitNFA(A: Set<string>, visitor: NFAVisitor) {
+  public visitNFA(A: HashSet<string>, visitor: NFAVisitor) {
     return visitor.visitPlus(A, this.expr);
   }
 
@@ -157,7 +158,7 @@ class GroupingExpression extends Expression {
     super();
   }
 
-  public visitNFA(A: Set<string>, visitor: NFAVisitor) {
+  public visitNFA(A: HashSet<string>, visitor: NFAVisitor) {
     return visitor.visitGrouping(A, this.expr);
   }
 

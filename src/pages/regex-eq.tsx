@@ -8,7 +8,6 @@ import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { DFA } from "@/finite-automata/dfa";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -33,17 +32,14 @@ export function RegexEq() {
   useEffect(() => {
     const worker = new Worker(new URL("@/workers/regex-eq.ts", import.meta.url));
 
-    worker.onmessage = (e: MessageEvent<{ success: boolean; d1: DFA; d2: DFA }>) => {
+    worker.onmessage = (e: MessageEvent<{ success: boolean; m1: string | null; m2: string | null }>) => {
       const { success } = e.data;
 
       if (!success) {
         setIsOpen(false);
         toast.error("Parse failure!", { richColors: true });
       } else {
-        const { d1, d2 } = e.data;
-
-        const m1 = DFA.findMatch(d1);
-        const m2 = DFA.findMatch(d2);
+        const { m1, m2 } = e.data;
 
         setM1(m1);
         setM2(m2);

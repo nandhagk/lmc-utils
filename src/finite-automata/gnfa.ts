@@ -1,14 +1,21 @@
 import { DFA } from "@/finite-automata/dfa";
 import { EPSILON } from "@/finite-automata/lexer";
+import { HashMap, HashSet } from "@/lib/hash-map";
 
 export class GNFA {
-  private E = new Map<number, Map<number, string>>();
+  private E = new HashMap<number, HashMap<number, string>>();
 
-  constructor(public Q: Set<number>, public A: Set<string>, public S: number, public U: number, public D: Map<number, Map<number, string>>) {
+  constructor(
+    public Q: HashSet<number>,
+    public A: HashSet<string>,
+    public S: number,
+    public U: number,
+    public D: HashMap<number, HashMap<number, string>>
+  ) {
     for (const q of Q) {
       if (!D.has(q)) continue;
       for (const [state, sym] of D.get(q)!) {
-        if (!this.E.has(state)) this.E.set(state, new Map());
+        if (!this.E.has(state)) this.E.set(state, new HashMap());
         this.E.get(state)!.set(q, sym);
       }
     }
@@ -89,14 +96,14 @@ export class GNFA {
     const S = id++;
     const U = id++;
 
-    const Q = new Set([...R, S, U]);
-    const D = new Map<number, Map<number, string>>();
+    const Q = new HashSet([...R, S, U]);
+    const D = new HashMap<number, HashMap<number, string>>();
 
-    D.set(S, new Map([[T, EPSILON]]));
+    D.set(S, new HashMap([[T, EPSILON]]));
     for (const q of R) {
-      const H = new Map<number, string>();
+      const H = new HashMap<number, string>();
       for (const a of A) {
-        const r = C.get(q)!.get(a)!;
+        const r = C.get([q, a])!;
         if (!H.has(r)) {
           H.set(r, a);
         } else {
