@@ -99,6 +99,7 @@ export class CFG {
     for (;;) {
       const entry = this.productions.entries().find(([, rules]) => rules.values().find((rule) => this.isUnitRule(rule)));
       if (entry === undefined) break;
+
       const [variable, rules] = entry;
       const [unit] = rules.values().find((rule) => this.isUnitRule(rule))!;
 
@@ -133,7 +134,7 @@ export class CFG {
       this.productions.delete(variable);
     }
 
-    for (const [variable, rules] of this.productions.entries()) {
+    for (const [variable, rules] of [...this.productions.entries()]) {
       this.productions.set(variable, new HashSet(rules.values().filter((rule) => rule.every((sym) => generating.has(sym)))));
     }
 
@@ -146,11 +147,11 @@ export class CFG {
       this.productions.delete(variable);
     }
 
-    for (const [variable, rules] of this.productions.entries()) {
+    for (const [variable, rules] of [...this.productions.entries()]) {
       this.productions.set(variable, new HashSet(rules.values().filter((rule) => rule.every((sym) => reachable.has(sym)))));
     }
 
-    for (const [variable, rules] of this.productions.entries()) {
+    for (const [variable, rules] of [...this.productions.entries()]) {
       this.productions.set(
         variable,
         new HashSet(rules.values().map((rule) => (CFG.isEpsilonRule(rule) ? rule : rule.filter((sym) => sym !== EPSILON))))
@@ -242,8 +243,26 @@ export class CFG {
 
     c.simplify();
     c.removeEpsilonRules();
-    c.removeUnitRules();
+
+    // c.removeUnitRules();
+    for (const [variable, rules] of [...c.productions.entries()]) {
+      c.productions.set(variable, new HashSet(rules.values().filter((rule) => !(c.isUnitRule(rule) && rule[0] === variable))));
+    }
+
     c.simplify();
+    for (const variable of [...c.variables]) {
+      const rules = c.productions.get(variable);
+      if (rules.size !== 1) continue;
+
+      const [rule] = rules;
+      if (!c.isUnitRule(rule)) continue;
+
+      c.variables.delete(variable);
+      c.productions.delete(variable);
+      for (const [v, rs] of [...c.productions.entries()]) {
+        c.productions.set(v, new HashSet(rs.values().map((r) => r.map((s) => (s === variable ? rule[0] : s)))));
+      }
+    }
 
     c.rename();
     return c;

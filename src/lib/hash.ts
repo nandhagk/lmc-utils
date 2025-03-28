@@ -244,6 +244,18 @@ export class HashSet<V> implements Hashable {
     return s.size === 0;
   }
 
+  public symmetricDifference(other: Iterable<V>) {
+    const s = new HashSet(this.values());
+    const t = new HashSet();
+
+    for (const val of other) {
+      if (!s.has(val)) t.add(val);
+      s.delete(val);
+    }
+
+    return new HashSet([...s, ...t]);
+  }
+
   public hash(): Hash {
     return [...this.#vals.keys()].toSorted().reduce((acc, cur) => hashCombine(acc, cur), RAND_HST);
   }
