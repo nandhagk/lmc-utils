@@ -1,9 +1,5 @@
 (async () => {
-  const [{ DFA }, { NFA }, { HashSet }] = await Promise.all([
-    import("@/finite-automata/dfa"),
-    import("@/finite-automata/nfa"),
-    import("@/lib/hash-map"),
-  ]);
+  const [{ DFA }, { NFA }, { HashSet }] = await Promise.all([import("@/finite-automata/dfa"), import("@/finite-automata/nfa"), import("@/lib/hash")]);
 
   self.onmessage = (e: MessageEvent<{ alphabet: string; regex1: string; regex2: string }>) => {
     const { alphabet, regex1, regex2 } = e.data;

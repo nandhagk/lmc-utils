@@ -1,10 +1,9 @@
 import { EPSILON, Token, TokenType } from "@/finite-automata/lexer";
 import { NFA } from "@/finite-automata/nfa";
-import { HashSet } from "@/lib/hash-map";
+import { HashSet } from "@/lib/hash";
 
 abstract class Expression {
   abstract visitNFA(A: HashSet<string>, visitor: NFAVisitor): NFA;
-  abstract visitPrinter(printer: ASTPrinter): string;
 }
 
 export class NFAVisitor {
@@ -37,36 +36,6 @@ export class NFAVisitor {
   }
 }
 
-export class ASTPrinter {
-  public visitLiteral(sym: string) {
-    return sym;
-  }
-
-  public visitConcatenate(left: Expression, right: Expression) {
-    return left.visitPrinter(this) + right.visitPrinter(this);
-  }
-
-  public visitUnion(left: Expression, right: Expression) {
-    return left.visitPrinter(this) + "|" + right.visitPrinter(this);
-  }
-
-  public visitOption(expr: Expression) {
-    return expr.visitPrinter(this) + "?";
-  }
-
-  public visitStar(expr: Expression) {
-    return expr.visitPrinter(this) + "*";
-  }
-
-  public visitPlus(expr: Expression) {
-    return expr.visitPrinter(this) + "+";
-  }
-
-  public visitGrouping(expr: Expression) {
-    return "(" + expr.visitPrinter(this) + ")";
-  }
-}
-
 class LiteralExpression extends Expression {
   constructor(public literal: Token) {
     super();
@@ -74,10 +43,6 @@ class LiteralExpression extends Expression {
 
   public visitNFA(A: HashSet<string>, visitor: NFAVisitor) {
     return visitor.visitLiteral(A, this.literal.lexeme);
-  }
-
-  public visitPrinter(printer: ASTPrinter): string {
-    return printer.visitLiteral(this.literal.lexeme);
   }
 }
 
@@ -91,10 +56,6 @@ class ConcatenateExpression extends Expression {
   public visitNFA(A: HashSet<string>, visitor: NFAVisitor) {
     return visitor.visitConcatenate(A, this.left, this.right);
   }
-
-  public visitPrinter(printer: ASTPrinter): string {
-    return printer.visitConcatenate(this.left, this.right);
-  }
 }
 
 class UnionExpression extends Expression {
@@ -104,10 +65,6 @@ class UnionExpression extends Expression {
 
   public visitNFA(A: HashSet<string>, visitor: NFAVisitor) {
     return visitor.visitUnion(A, this.left, this.right);
-  }
-
-  public visitPrinter(printer: ASTPrinter): string {
-    return printer.visitUnion(this.left, this.right);
   }
 }
 
@@ -119,10 +76,6 @@ class OptionExpression extends Expression {
   public visitNFA(A: HashSet<string>, visitor: NFAVisitor) {
     return visitor.visitOption(A, this.expr);
   }
-
-  public visitPrinter(printer: ASTPrinter): string {
-    return printer.visitOption(this.expr);
-  }
 }
 
 class StarExpression extends Expression {
@@ -132,10 +85,6 @@ class StarExpression extends Expression {
 
   public visitNFA(A: HashSet<string>, visitor: NFAVisitor) {
     return visitor.visitStar(A, this.expr);
-  }
-
-  public visitPrinter(printer: ASTPrinter): string {
-    return printer.visitStar(this.expr);
   }
 }
 
@@ -147,10 +96,6 @@ class PlusExpression extends Expression {
   public visitNFA(A: HashSet<string>, visitor: NFAVisitor) {
     return visitor.visitPlus(A, this.expr);
   }
-
-  public visitPrinter(printer: ASTPrinter): string {
-    return printer.visitPlus(this.expr);
-  }
 }
 
 class GroupingExpression extends Expression {
@@ -161,22 +106,18 @@ class GroupingExpression extends Expression {
   public visitNFA(A: HashSet<string>, visitor: NFAVisitor) {
     return visitor.visitGrouping(A, this.expr);
   }
-
-  public visitPrinter(printer: ASTPrinter): string {
-    return printer.visitGrouping(this.expr);
-  }
 }
 
 export class Parser {
   private current = 0;
 
-  constructor(private tokens: Token[]) {}
+  public constructor(private readonly tokens: Token[]) {}
 
-  public parse() {
+  public parse(): Expression {
     return this.union();
   }
 
-  public reset() {
+  public reset(): void {
     this.current = 0;
   }
 
@@ -242,7 +183,7 @@ export class Parser {
     return new LiteralExpression(this.previous());
   }
 
-  private match(...types: TokenType[]) {
+  private match(...types: TokenType[]): boolean {
     for (const type of types) {
       if (this.check(type)) {
         this.advance();
@@ -253,31 +194,31 @@ export class Parser {
     return false;
   }
 
-  private consume(type: TokenType) {
+  private consume(type: TokenType): Token {
     if (this.check(type)) return this.advance();
 
     throw new Error("HOW");
   }
 
-  private check(type: TokenType) {
+  private check(type: TokenType): boolean {
     if (this.isAtEnd()) return false;
     return this.peek().type === type;
   }
 
-  private advance() {
+  private advance(): Token {
     if (!this.isAtEnd()) ++this.current;
     return this.previous();
   }
 
-  private isAtEnd() {
+  private isAtEnd(): boolean {
     return this.peek().type === TokenType.EOF;
   }
 
-  private peek() {
+  private peek(): Token {
     return this.tokens[this.current];
   }
 
-  private previous() {
+  private previous(): Token {
     return this.tokens[this.current - 1];
   }
 }

@@ -38,6 +38,10 @@ const data = [
         title: "CFG to CNF",
         url: "/cfg-cnf",
       },
+      {
+        title: "PDA to CFG",
+        url: "/pda-cfg",
+      },
     ],
   },
 ];

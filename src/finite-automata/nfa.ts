@@ -1,10 +1,10 @@
 import { DFA } from "@/finite-automata/dfa";
 import { EPSILON, Lexer } from "@/finite-automata/lexer";
 import { NFAVisitor, Parser } from "@/finite-automata/parser";
-import { DefaultHashMap, HashMap, HashSet } from "@/lib/hash-map";
+import { DefaultHashMap, HashMap, HashSet } from "@/lib/hash";
 
 export class NFA {
-  constructor(
+  public constructor(
     public Q: HashSet<number>,
     public A: HashSet<string>,
     public S: number,
@@ -14,7 +14,7 @@ export class NFA {
 
   public static id = 0;
 
-  static null(A: HashSet<string>) {
+  public static null(A: HashSet<string>): NFA {
     const S = this.id++;
 
     const F = new HashSet<number>();
@@ -24,7 +24,7 @@ export class NFA {
     return new NFA(Q, A, S, D, F);
   }
 
-  static empty(A: HashSet<string>) {
+  public static empty(A: HashSet<string>): NFA {
     const S = this.id++;
 
     const F = new HashSet([S]);
@@ -34,7 +34,7 @@ export class NFA {
     return new NFA(Q, A, S, D, F);
   }
 
-  static literal(A: HashSet<string>, sym: string) {
+  public static literal(A: HashSet<string>, sym: string): NFA {
     const S = this.id++;
     const E = this.id++;
 
@@ -45,7 +45,7 @@ export class NFA {
     return new NFA(Q, A, S, D, F);
   }
 
-  static union(n1: NFA, n2: NFA) {
+  public static union(n1: NFA, n2: NFA): NFA {
     const S = this.id++;
 
     const A = new HashSet([...n1.A, ...n2.A]);
@@ -59,7 +59,7 @@ export class NFA {
     return new NFA(Q, A, S, D, F);
   }
 
-  static concatenate(n1: NFA, n2: NFA) {
+  public static concatenate(n1: NFA, n2: NFA): NFA {
     const S = n1.S;
     const T = n2.S;
     const E = n1.F;
@@ -73,7 +73,7 @@ export class NFA {
     return new NFA(Q, A, S, D, F);
   }
 
-  static star(n: NFA) {
+  public static star(n: NFA): NFA {
     const T = n.S;
     const A = n.A;
     const E = n.F;
@@ -90,7 +90,7 @@ export class NFA {
     return new NFA(Q, A, S, D, F);
   }
 
-  static fromDFA(d: DFA) {
+  public static fromDFA(d: DFA): NFA {
     const A = d.A;
     const R = d.Q;
     const T = d.S;
@@ -112,26 +112,26 @@ export class NFA {
     return new NFA(Q, A, S, D, F);
   }
 
-  static complement(n: NFA) {
+  public static complement(n: NFA): NFA {
     const d = DFA.fromNFA(n);
     d.F = d.Q.difference(d.F);
 
     return this.fromDFA(d);
   }
 
-  static intersection(n1: NFA, n2: NFA) {
+  public static intersection(n1: NFA, n2: NFA): NFA {
     return this.complement(this.union(this.complement(n1), this.complement(n2)));
   }
 
-  static difference(n1: NFA, n2: NFA) {
+  public static difference(n1: NFA, n2: NFA): NFA {
     return this.complement(this.union(this.complement(n1), n2));
   }
 
-  static symmetricDifference(n1: NFA, n2: NFA) {
+  public static symmetricDifference(n1: NFA, n2: NFA): NFA {
     return this.union(this.difference(n1, n2), this.difference(n2, n1));
   }
 
-  static reverse(n: NFA) {
+  public static reverse(n: NFA): NFA {
     const m = this.fromDFA(DFA.fromNFA(n));
 
     const A = m.A;
@@ -157,7 +157,7 @@ export class NFA {
     return new NFA(Q, A, S, D, F);
   }
 
-  static fromRegularExpression(A: HashSet<string>, text: string) {
+  public static fromRegularExpression(A: HashSet<string>, text: string): NFA {
     const tokenizer = new Lexer(text);
     const tokens = tokenizer.lex();
 

@@ -4,47 +4,51 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { GraphCanvas } from "@/components/graph/graph-canvas";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
 
 const FormSchema = z.object({
   alphabet: z.string(),
-  regex1: z.string(),
-  regex2: z.string(),
+  start: z.string(),
+  accept: z.string(),
+  pda: z.string(),
 });
 
-export function RegexEq() {
+export function PDACFG() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       alphabet: "a,b",
-      regex1: "(a(ba)*)*",
-      regex2: "((a|(ab))*a)?",
+      start: "q0",
+      accept: "q3",
+      pda: "q0 q1 ~,~ -> $\nq1 q1 a,~ -> 2\nq1 q1 a,~ -> 3\nq1 q2 ~,~ -> ~\nq2 q2 b,1 -> ~\nq2 q2 b,2 -> 1\nq2 q2 b,3 -> 2\nq2 q3 ~,$ -> ~",
     },
   });
+
+  const graph = form.watch("pda");
+  const selected = form.watch("accept");
 
   const [worker, setWorker] = useState<Worker | null>(null);
 
   useEffect(() => {
-    const worker = new Worker(new URL("@/workers/regex-eq.ts", import.meta.url));
+    const worker = new Worker(new URL("@/workers/pda-cfg.ts", import.meta.url));
 
-    worker.onmessage = (e: MessageEvent<{ success: boolean; m1: string | null; m2: string | null }>) => {
+    worker.onmessage = (e: MessageEvent<{ success: boolean; cfg: string }>) => {
       const { success } = e.data;
 
       if (!success) {
         setIsOpen(false);
         toast.error("Parse failure!", { richColors: true });
       } else {
-        const { m1, m2 } = e.data;
+        const { cfg } = e.data;
 
-        setM1(m1);
-        setM2(m2);
-        setEQ(m1 === null && m2 === null);
-
+        setCFG(cfg);
         setIsLoading(false);
       }
     };
@@ -54,9 +58,7 @@ export function RegexEq() {
     return () => worker.terminate();
   }, []);
 
-  const [eq, setEQ] = useState(true);
-  const [m1, setM1] = useState<string | null>(null);
-  const [m2, setM2] = useState<string | null>(null);
+  const [cfg, setCFG] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -74,15 +76,15 @@ export function RegexEq() {
 
   return (
     <>
-      <div className="flex flex-col items-center justify-center p-6 md:p-10">
-        <div className="max-w-sm md:max-w-3xl">
+      <div className="flex flex-row flex-wrap items-center justify-center p-6 md:p-10">
+        <div className="md:h-full flex-none max-w-sm md:max-w-3xl">
           <div className="flex flex-col gap-6">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 md:p-8">
                 <div className="flex flex-col gap-6">
                   <div className="flex flex-col items-center text-center">
-                    <h1 className="text-2xl font-bold">RegEx Equivalence</h1>
-                    <p className="text-balance text-muted-foreground">Check equivalence of Regular Expressions</p>
+                    <h1 className="text-2xl font-bold">PDA to CFG</h1>
+                    <p className="text-balance text-muted-foreground">Find CFG accepted by PDA</p>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="alphabet">Alphabet</Label>
@@ -99,69 +101,72 @@ export function RegexEq() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="regex1">Regular Expression 1</Label>
+                    <Label htmlFor="start">Start</Label>
                     <FormField
                       control={form.control}
-                      name="regex1"
+                      name="start"
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input id="regex1" className="font-mono" placeholder="Regular Expression" {...field} />
+                            <Input id="start" className="font-mono" placeholder="Start" {...field} />
                           </FormControl>
                         </FormItem>
                       )}
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="regex1">Regular Expression 2</Label>
+                    <Label htmlFor="accept">Accept</Label>
                     <FormField
                       control={form.control}
-                      name="regex2"
+                      name="accept"
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input id="regex2" className="font-mono" placeholder="Regular Expression" {...field} />
+                            <Input id="accept" className="font-mono" placeholder="Accept" {...field} />
                           </FormControl>
                         </FormItem>
                       )}
                     />
                   </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="pda">PDA</Label>
+                    <FormField
+                      control={form.control}
+                      name="pda"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Textarea id="pda" placeholder="PDA" {...field} className="min-h-36 font-mono" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                   <Button type="submit" className="cursor-pointer w-full">
-                    Check
+                    Find
                   </Button>
                 </div>
               </form>
             </Form>
           </div>
         </div>
+        <GraphCanvas graph={graph} selected={selected.split(",").map((s) => s.trim())}></GraphCanvas>
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{isLoading ? "Processing" : eq ? "Equivalent" : "Not Equivalent"}</DialogTitle>
+            <DialogTitle>{isLoading ? "Processing" : "CFG"}</DialogTitle>
           </DialogHeader>
           {isLoading ? (
             <Spinner />
           ) : (
-            <>
-              {m1 !== null && (
-                <div className="flex items-center space-x-2">
-                  <div className="grid flex-1 gap-2">
-                    <Label htmlFor="m1">Matched by 1 but not by 2</Label>
-                    <pre className="text-wrap font-mono md:text-sm">{m1 === "" ? "[empty-string]" : m1}</pre>
-                  </div>
-                </div>
-              )}
-              {m2 !== null && (
-                <div className="flex items-center space-x-2">
-                  <div className="grid flex-1 gap-2">
-                    <Label htmlFor="m2">Matched by 2 but not by 1</Label>
-                    <pre className="text-wrap font-mono md:text-sm">{m2 === "" ? "[empty-string]" : m2}</pre>
-                  </div>
-                </div>
-              )}
-            </>
+            <div className="flex items-center space-x-2">
+              <div className="grid flex-1 gap-2">
+                <pre className="text-wrap break-all font-mono md:text-sm">{cfg}</pre>
+              </div>
+            </div>
           )}
         </DialogContent>
       </Dialog>

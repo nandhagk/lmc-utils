@@ -16,45 +16,44 @@ export const enum TokenType {
 export class Token {
   constructor(public type: TokenType, public lexeme: string) {}
 
-  static EOF() {
+  public static EOF(): Token {
     return new Token(TokenType.EOF, "\0");
   }
 
-  static LeftParen() {
+  public static LeftParen(): Token {
     return new Token(TokenType.LeftParen, "(");
   }
 
-  static RightParen() {
+  public static RightParen(): Token {
     return new Token(TokenType.RightParen, ")");
   }
 
-  static QuestionMark() {
+  public static QuestionMark(): Token {
     return new Token(TokenType.QuestionMark, "?");
   }
 
-  static Asterisk() {
+  public static Asterisk(): Token {
     return new Token(TokenType.Asterisk, "*");
   }
 
-  static Pipe() {
+  public static Pipe(): Token {
     return new Token(TokenType.Pipe, "|");
   }
 
-  static Plus() {
+  public static Plus(): Token {
     return new Token(TokenType.Plus, "+");
   }
 
-  static Alphabet(sym: string) {
+  public static Alphabet(sym: string): Token {
     return new Token(TokenType.Alphabet, sym);
   }
 }
 
 export class Lexer {
-  constructor(private text: string) {}
+  constructor(private readonly text: string) {}
 
-  public lex() {
-    const tokens = this.text
-      .split("")
+  public lex(): Token[] {
+    const tokens = [...this.text.replaceAll(ALT_EPSILON, EPSILON)]
       .filter((sym) => ALLOWED.test(sym))
       .map((sym) => {
         switch (sym) {
@@ -71,7 +70,7 @@ export class Lexer {
           case "?":
             return Token.QuestionMark();
           default:
-            return Token.Alphabet(sym === ALT_EPSILON ? EPSILON : sym);
+            return Token.Alphabet(sym);
         }
       });
 

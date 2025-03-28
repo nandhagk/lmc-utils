@@ -1,44 +1,52 @@
-const rand16 = () => BigInt(Math.floor(Math.random() * (1 << 16)));
-const rand32 = () => (rand16() << 16n) | rand16();
-const rand64 = () => (rand32() << 32n) | rand32();
+export type Hash = bigint;
 
-const hasHashCode = (key: NonNullable<unknown>): key is object & { hashCode: () => bigint } => typeof key === "object" && "hashCode" in key;
+const rand16 = (): Hash => BigInt(Math.floor(Math.random() * (1 << 16)));
+const rand32 = (): Hash => (rand16() << 16n) | rand16();
+export const rand64 = (): Hash => (rand32() << 32n) | rand32();
 
-const RAND_NUM = rand64();
-const RAND_ARR = rand64();
-const RAND_STR = rand64();
-const RAND_OBJ = rand64();
-const RAND_NIL = rand64();
 const RAND_UND = rand64();
+const RAND_NIL = rand64();
+const RAND_BNT = rand64();
+const RAND_INT = rand64();
+const RAND_BOL = rand64();
+const RAND_STR = rand64();
+const RAND_ARR = rand64();
+const RAND_OBJ = rand64();
 const RAND_HMP = rand64();
 const RAND_HST = rand64();
 
-const hashCombine = (seed: bigint, key: unknown) => BigInt.asUintN(64, seed ^ (hash(key) + 0x9e3779b97f4a7c15n + (seed << 12n) + (seed >> 4n)));
+export interface Hashable {
+  hash(): Hash;
+}
 
-export const hash = (key: unknown): bigint => {
+const isHashable = (key: NonNullable<unknown>): key is Hashable => typeof key === "object" && "hash" in key;
+
+const hashInt = (seed: Hash, key: bigint): Hash => {
+  key += 0x9e3779b97f4a7c15n + seed;
+  key = (key ^ (key >> 30n)) * 0xbf58476d1ce4e5b9n;
+  key = (key ^ (key >> 27n)) * 0x94d049bb133111ebn;
+
+  return BigInt.asUintN(64, key ^ (key >> 31n));
+};
+
+const isInteger = (key: unknown): key is number => Number.isSafeInteger(key);
+
+export const hashCombine = (seed: Hash, key: unknown): Hash =>
+  BigInt.asUintN(64, seed ^ (hash(key) + 0x9e3779b97f4a7c15n + (seed << 12n) + (seed >> 4n)));
+
+const hash = (key: unknown): Hash => {
   if (key === undefined) return RAND_UND;
   if (key === null) return RAND_NIL;
 
-  if (typeof key === "string") {
-    let k = RAND_STR;
+  if (isHashable(key)) return key.hash();
 
-    for (const char of key) k = hashCombine(k, char.codePointAt(0));
-    return k;
-  }
+  if (typeof key === "bigint") return hashInt(RAND_BNT, key);
+  if (isInteger(key)) return hashInt(RAND_INT, BigInt(key));
+  if (typeof key === "boolean") return hashInt(RAND_BOL, BigInt(key));
 
-  if (typeof key === "number" || typeof key === "bigint" || typeof key === "boolean") {
-    let k = BigInt(key);
-
-    k += 0x9e3779b97f4a7c15n + RAND_NUM;
-    k = (k ^ (k >> 30n)) * 0xbf58476d1ce4e5b9n;
-    k = (k ^ (k >> 27n)) * 0x94d049bb133111ebn;
-
-    return BigInt.asUintN(64, k ^ (k >> 31n));
-  }
-
+  if (typeof key === "string") return [...key].reduce((acc, cur) => hashCombine(acc, cur.codePointAt(0)), RAND_STR);
   if (Array.isArray(key)) return key.reduce((acc, cur) => hashCombine(acc, cur), RAND_ARR);
 
-  if (hasHashCode(key)) return key.hashCode();
   if (typeof key === "object")
     return Object.entries(key)
       .map((x) => hash(x))
@@ -78,9 +86,9 @@ class HashMapEntriesIterator<K, V> extends Iterator<[K, V]> {
 }
 
 // DO NOT mutate while iterating
-export class HashMap<K, V> {
-  #keys = new Map<bigint, K>();
-  #vals = new Map<bigint, V>();
+export class HashMap<K, V> implements Hashable {
+  #keys = new Map<Hash, K>();
+  #vals = new Map<Hash, V>();
 
   public constructor(entries?: Iterable<[K, V]>) {
     if (entries !== undefined) {
@@ -132,14 +140,14 @@ export class HashMap<K, V> {
     return this.entries();
   }
 
-  public hashCode() {
+  public hash(): Hash {
     return [...this.#vals.entries()].toSorted().reduce((acc, cur) => hashCombine(acc, cur), RAND_HMP);
   }
 }
 
 // DO NOT mutate while iterating
-export class HashSet<V> {
-  #vals = new Map<bigint, V>();
+export class HashSet<V> implements Hashable {
+  #vals = new Map<Hash, V>();
 
   public constructor(vals?: Iterable<V>) {
     if (vals !== undefined) {
@@ -180,7 +188,7 @@ export class HashSet<V> {
   }
 
   public difference(other: Iterable<V>) {
-    const s = new HashSet([...this.values()]);
+    const s = new HashSet(this.values());
 
     for (const val of other) {
       if (this.has(val)) s.delete(val);
@@ -207,7 +215,36 @@ export class HashSet<V> {
     return true;
   }
 
-  public hashCode() {
+  public isSubsetOf(other: Iterable<V>) {
+    const s = new HashSet(this.values());
+
+    for (const val of other) {
+      if (s.has(val)) s.delete(val);
+    }
+
+    return s.size === 0;
+  }
+
+  public isSupersetOf(other: Iterable<V>) {
+    for (const val of other) {
+      if (!this.has(val)) return false;
+    }
+
+    return true;
+  }
+
+  public isEqual(other: Iterable<V>) {
+    const s = new HashSet(this.values());
+
+    for (const val of other) {
+      if (!s.has(val)) return false;
+      s.delete(val);
+    }
+
+    return s.size === 0;
+  }
+
+  public hash(): Hash {
     return [...this.#vals.keys()].toSorted().reduce((acc, cur) => hashCombine(acc, cur), RAND_HST);
   }
 }

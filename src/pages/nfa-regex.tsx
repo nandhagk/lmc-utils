@@ -1,18 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
+import { GraphCanvas } from "@/components/graph/graph-canvas";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-
-import { GraphCanvas } from "@/components/graph/graph-canvas";
 import { Spinner } from "@/components/ui/spinner";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 
 const FormSchema = z.object({
   alphabet: z.string(),
@@ -67,7 +66,12 @@ export function NFARegex() {
     setIsLoading(true);
     setIsOpen(true);
 
-    worker?.postMessage(data);
+    if (worker === null) {
+      toast.error("Failed to load worker!", { richColors: true });
+      return;
+    }
+
+    worker.postMessage(data);
   };
 
   return (

@@ -1,61 +1,15 @@
 import { ParsedGraph } from "./types";
 import { padNode } from "./utils";
 
-/* function isConvertibleToNum(s: string): boolean {
-  for (const c of s) {
-    if (!(c >= "0" && c <= "9")) {
-      return false;
-    }
-  }
-  return true;
-} */
-
-interface LeetcodeParsed {
-  status: "ok" | "bad";
-  edges: Array<string[]>;
-}
-
-function parseLeetcodeStyle(s: string): LeetcodeParsed {
-  if (s.length >= 4 && s[0] === "[" && s[1] === "[") {
-    if (s[s.length - 1] === "]" && s[s.length - 2] === "]") {
-      return {
-        status: "ok",
-        edges: s
-          .substring(2, s.length - 2)
-          .split("],[")
-          .map((t) => t.split(",")),
-      };
-    }
-  }
-  return {
-    status: "bad",
-    edges: [],
-  };
-}
-
 export function parseGraphInputEdges(roots: string, input: string, testCaseNumber: number): ParsedGraph {
-  const leetcodes = new Array<string[]>();
-
   const raw = input
     .split("\n")
     .map((s) => {
       const sTrimmed = s.trim().split(/\s+/);
-      const leet = parseLeetcodeStyle(sTrimmed[0]);
-      if (sTrimmed.length === 1 && leet.status === "ok") {
-        for (const l of leet.edges) {
-          leetcodes.push(l);
-        }
-        return [""];
-      }
       return sTrimmed;
     })
-    .filter((nodes) => nodes[0].length);
-
-  for (const s of leetcodes) {
-    if (s[0].length) {
-      raw.push(s);
-    }
-  }
+    .filter((nodes) => nodes[0].length)
+    .map(([u, v, ...e]) => [u, v, e.join(" ")]);
 
   const nodes = new Array<string>();
   const adj = new Map<string, string[]>();

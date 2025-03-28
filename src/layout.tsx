@@ -10,6 +10,7 @@ const pathMap = new Map<string, string[]>([
   ["/regex-eq", ["Finite Automata", "RegEx Equivalence"]],
   ["/nfa-regex", ["Finite Automata", "NFA to RegEx"]],
   ["/cfg-cnf", ["Pushdown Automata", "CFG to CNF"]],
+  ["/pda-cfg", ["Pushdown Automata", "PDA to CFG"]],
 ]);
 
 export function Layout() {

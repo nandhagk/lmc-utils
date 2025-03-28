@@ -4,7 +4,7 @@
     import("@/finite-automata/nfa"),
     import("@/finite-automata/gnfa"),
     import("@/finite-automata/lexer"),
-    import("@/lib/hash-map"),
+    import("@/lib/hash"),
   ]);
 
   self.onmessage = (e: MessageEvent<{ alphabet: string; start: string; accept: string; nfa: string }>) => {
@@ -41,9 +41,9 @@
       Q.add(y);
 
       for (const b of a
+        .replaceAll(ALT_EPSILON, EPSILON)
         .split(",")
-        .map((c) => c.trim())
-        .map((c) => (c === ALT_EPSILON ? EPSILON : c))) {
+        .map((c) => c.trim())) {
         D.get([x, b]).add(y);
       }
     }

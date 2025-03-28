@@ -1,9 +1,9 @@
 import { EPSILON } from "@/finite-automata/lexer";
 import { NFA } from "@/finite-automata/nfa";
-import { DefaultHashMap, HashMap, HashSet } from "@/lib/hash-map";
+import { DefaultHashMap, HashMap, HashSet } from "@/lib/hash";
 
 class NDFA {
-  constructor(
+  public constructor(
     public Q: HashSet<HashSet<number>>,
     public A: HashSet<string>,
     public S: HashSet<number>,
@@ -11,7 +11,7 @@ class NDFA {
     public F: HashSet<HashSet<number>>
   ) {}
 
-  static fromNFA(n: NFA) {
+  public static fromNFA(n: NFA): NDFA {
     const P = n.Q;
     const E = n.F;
     const R = n.S;
@@ -71,7 +71,7 @@ class NDFA {
 }
 
 export class DFA {
-  constructor(
+  public constructor(
     public Q: HashSet<number>,
     public A: HashSet<string>,
     public S: number,
@@ -79,7 +79,7 @@ export class DFA {
     public F: HashSet<number>
   ) {}
 
-  static fromNFA(n: NFA) {
+  public static fromNFA(n: NFA): DFA {
     let id = 0;
 
     const nd = NDFA.fromNFA(n);
@@ -101,7 +101,7 @@ export class DFA {
     return new DFA(Q, A, S, D, F);
   }
 
-  public findMatch() {
+  public findMatch(): string | null {
     const match = new HashMap<number, string>([[this.S, ""]]);
 
     const stk = [this.S];

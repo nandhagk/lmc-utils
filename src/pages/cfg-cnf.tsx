@@ -1,18 +1,19 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 
-import { Spinner } from "@/components/ui/spinner";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-
 const FormSchema = z.object({
+  alphabet: z.string(),
   cfg: z.string(),
 });
 
@@ -20,6 +21,7 @@ export function CFGCNF() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
+      alphabet: "a,b",
       cfg: "S -> A S A | a B\nA -> B | S\nB -> b | ~",
     },
   });
@@ -56,7 +58,12 @@ export function CFGCNF() {
     setIsLoading(true);
     setIsOpen(true);
 
-    worker?.postMessage(data);
+    if (worker === null) {
+      toast.error("Failed to load worker!", { richColors: true });
+      return;
+    }
+
+    worker.postMessage(data);
   };
 
   return (
@@ -71,7 +78,20 @@ export function CFGCNF() {
                     <h1 className="text-2xl font-bold">CFG to CNF</h1>
                     <p className="text-balance text-muted-foreground">Convert CFG to Chomsky Normal Form</p>
                   </div>
-
+                  <div className="grid gap-2">
+                    <Label htmlFor="alphabet">Alphabet</Label>
+                    <FormField
+                      control={form.control}
+                      name="alphabet"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input id="alphabet" className="font-mono" placeholder="Alphabet" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   <div className="grid gap-2">
                     <Label htmlFor="nfa">CFG</Label>
                     <FormField

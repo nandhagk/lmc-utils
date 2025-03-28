@@ -1,11 +1,11 @@
 import { DFA } from "@/finite-automata/dfa";
 import { EPSILON } from "@/finite-automata/lexer";
-import { HashMap, HashSet } from "@/lib/hash-map";
+import { HashMap, HashSet } from "@/lib/hash";
 
 export class GNFA {
   private E = new HashMap<number, HashMap<number, string>>();
 
-  constructor(
+  public constructor(
     public Q: HashSet<number>,
     public A: HashSet<string>,
     public S: number,
@@ -21,7 +21,7 @@ export class GNFA {
     }
   }
 
-  public remove(q: number) {
+  public remove(q: number): void {
     let self = this.D.get(q)!.get(q) ?? null;
     if (self !== null && self.length > 1) self = `(${self})`;
     if (self !== null) self = `${self}*`;
@@ -54,7 +54,7 @@ export class GNFA {
     this.E.delete(q);
   }
 
-  public removeAll() {
+  public removeAll(): void {
     const Q = this.Q;
     for (const q of Q) {
       if (q === this.S || q === this.U) continue;
@@ -62,12 +62,12 @@ export class GNFA {
     }
   }
 
-  public toRegularExpression() {
+  public toRegularExpression(): string | null {
     this.removeAll();
     return this.D.get(this.S)!.get(this.U) ?? null;
   }
 
-  private static union(a: string, b: string) {
+  private static union(a: string, b: string): string {
     if (a.length > 1) a = `(${a})`;
     if (b.length > 1) b = `(${b})`;
 
@@ -78,14 +78,14 @@ export class GNFA {
     return EPSILON;
   }
 
-  private static concat(a: string, b: string) {
+  private static concat(a: string, b: string): string {
     if (a !== EPSILON && b !== EPSILON) return a + b;
     if (a !== EPSILON) return a;
     if (b !== EPSILON) return b;
     return EPSILON;
   }
 
-  static fromDFA(d: DFA) {
+  public static fromDFA(d: DFA): GNFA {
     const A = d.A;
     const R = d.Q;
     const T = d.S;

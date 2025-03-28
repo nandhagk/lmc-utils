@@ -117,7 +117,7 @@ export function drawEdgeLabel(
   ctx.fillStyle = edgeLabelColor;
 
   if (u.x === v.x && u.y === v.y) {
-    ctx.fillText(label, u.x, u.y - 65);
+    ctx.fillText(label, u.x, u.y - r * 25 - 65);
   } else {
     ctx.fillText(label, mx + px, my + py);
   }

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 
+import { ALT_EPSILON, EPSILON } from "@/finite-automata/lexer";
 import { animateGraph, resizeGraph, updateDirected, updateGraph, updateSettings } from "./animate-graph";
 import { parseGraphInputEdges } from "./parse-graph-input";
 
@@ -55,7 +56,11 @@ export function GraphCanvas({ graph, selected }: Props) {
     animateGraph(canvas, ctx);
   }, []);
 
-  useEffect(() => updateGraph(new Map([[0, { graphEdges: parseGraphInputEdges("", graph, 0).graph!, selected }]])), [selected, graph]);
+  useEffect(() => {
+    const g = new Map([[0, { graphEdges: parseGraphInputEdges("", graph.replaceAll(ALT_EPSILON, EPSILON), 0).graph!, selected }]]);
+    console.log({ graph, g });
+    updateGraph(g);
+  }, [selected, graph]);
 
   return (
     <div className="min-w-[300px] h-96 md:h-full flex-1 border-2 border-white rounded-lg">
