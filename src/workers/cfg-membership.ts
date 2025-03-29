@@ -1,8 +1,8 @@
 (async () => {
-  const [{ HashSet }, { CFG }, { Parser }] = await Promise.all([
+  const [{ HashSet }, { CFG }, { Recognizer }] = await Promise.all([
     import("@/lib/hash"),
     import("@/pushdown-automata/cfg"),
-    import("@/pushdown-automata/parser"),
+    import("@/pushdown-automata/recognizer"),
   ]);
 
   self.onmessage = (e: MessageEvent<{ alphabet: string; test: string; cfg: string }>) => {
@@ -13,8 +13,8 @@
       const c = CFG.fromCFG(A, cfg);
       c.simplify();
 
-      const parser = new Parser(c);
-      self.postMessage({ success: true, isAccepted: parser.accepts(test) });
+      const recognizer = new Recognizer(c);
+      self.postMessage({ success: true, isAccepted: recognizer.accepts(test) });
     } catch (error) {
       console.error(error);
       self.postMessage({ success: false });

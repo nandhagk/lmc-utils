@@ -10,7 +10,7 @@ interface Item {
   pointer: number;
 }
 
-export class Parser {
+export class Recognizer {
   private nullable: HashSet<string> = new HashSet();
 
   // simplify cfg before passing
