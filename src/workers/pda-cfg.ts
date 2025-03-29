@@ -2,7 +2,6 @@
   const [{ PDA }, { CFG }, { EPSILON, ALT_EPSILON }, { HashMap, HashSet, DefaultHashMap }] = await Promise.all([
     import("@/pushdown-automata/pda"),
     import("@/pushdown-automata/cfg"),
-
     import("@/finite-automata/lexer"),
     import("@/lib/hash"),
   ]);

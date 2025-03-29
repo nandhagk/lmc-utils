@@ -143,6 +143,7 @@ export class CFG {
   }
 
   public simplify() {
+    // Remove S -> S
     for (const [variable, rules] of this.productions.entries()) {
       this.productions.set(variable, new HashSet(rules.values().filter((rule) => !(this.isUnitRule(rule) && rule[0] === variable))));
     }
@@ -201,8 +202,6 @@ export class CFG {
   }
 
   public static fromCFG(alphabet: HashSet<string>, text: string) {
-    const productions = new DefaultHashMap<string, HashSet<string[]>>(() => new HashSet());
-
     const cfg = text
       .split("\n")
       .map((production) => production.split("->"))
@@ -217,6 +216,7 @@ export class CFG {
           ] as [string, string[][]]
       );
 
+    const productions = new DefaultHashMap<string, HashSet<string[]>>(() => new HashSet());
     for (const [variable, rules] of cfg) {
       for (const rule of rules) {
         productions.get(variable).add(rule);

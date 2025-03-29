@@ -10,7 +10,8 @@
       c.cnf();
 
       self.postMessage({ success: true, cnf: c.toString() });
-    } catch {
+    } catch (error) {
+      console.error(error);
       self.postMessage({ success: false });
     }
   };

@@ -93,7 +93,7 @@ export function CFGCNF() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="nfa">CFG</Label>
+                    <Label htmlFor="cfg">CFG</Label>
                     <FormField
                       control={form.control}
                       name="cfg"

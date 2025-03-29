@@ -96,47 +96,47 @@ export class HashMap<K, V> implements Hashable {
     }
   }
 
-  public get size() {
+  public get size(): number {
     return this.#keys.size;
   }
 
-  public clear() {
+  public clear(): void {
     this.#keys.clear();
     this.#vals.clear();
   }
 
-  public get(key: K) {
-    return this.#vals.get(hash(key));
+  public get(key: K): V | null {
+    return this.#vals.get(hash(key)) ?? null;
   }
 
-  public has(key: K) {
+  public has(key: K): boolean {
     return this.#keys.has(hash(key));
   }
 
-  public set(key: K, val: V) {
+  public set(key: K, val: V): void {
     const k = hash(key);
     this.#keys.set(k, key);
     this.#vals.set(k, val);
   }
 
-  public delete(key: K) {
+  public delete(key: K): boolean {
     const k = hash(key);
     return this.#keys.delete(k) && this.#vals.delete(k);
   }
 
-  public keys() {
+  public keys(): MapIterator<K> {
     return this.#keys.values();
   }
 
-  public values() {
+  public values(): MapIterator<V> {
     return this.#vals.values();
   }
 
-  public entries() {
+  public entries(): MapIterator<[K, V]> {
     return new HashMapEntriesIterator(this.#keys.values(), this.#vals.values());
   }
 
-  [Symbol.iterator]() {
+  [Symbol.iterator](): MapIterator<[K, V]> {
     return this.entries();
   }
 
@@ -155,39 +155,39 @@ export class HashSet<V> implements Hashable {
     }
   }
 
-  public get size() {
+  public get size(): number {
     return this.#vals.size;
   }
 
-  public clear() {
+  public clear(): void {
     this.#vals.clear();
   }
 
-  public add(val: V) {
+  public add(val: V): void {
     this.#vals.set(hash(val), val);
   }
 
-  public has(val: V) {
+  public has(val: V): boolean {
     return this.#vals.has(hash(val));
   }
 
-  public delete(val: V) {
+  public delete(val: V): boolean {
     return this.#vals.delete(hash(val));
   }
 
-  public values() {
+  public values(): MapIterator<V> {
     return this.#vals.values();
   }
 
-  [Symbol.iterator]() {
+  [Symbol.iterator](): MapIterator<V> {
     return this.values();
   }
 
-  public union(other: Iterable<V>) {
+  public union(other: Iterable<V>): HashSet<V> {
     return new HashSet([...this.values(), ...other]);
   }
 
-  public difference(other: Iterable<V>) {
+  public difference(other: Iterable<V>): HashSet<V> {
     const s = new HashSet(this.values());
 
     for (const val of other) {
@@ -197,7 +197,7 @@ export class HashSet<V> implements Hashable {
     return s;
   }
 
-  public intersection(other: Iterable<V>) {
+  public intersection(other: Iterable<V>): HashSet<V> {
     const s = new HashSet<V>();
 
     for (const val of other) {
@@ -207,7 +207,7 @@ export class HashSet<V> implements Hashable {
     return s;
   }
 
-  public isDisjointFrom(other: Iterable<V>) {
+  public isDisjointFrom(other: Iterable<V>): boolean {
     for (const val of other) {
       if (this.has(val)) return false;
     }
@@ -215,7 +215,7 @@ export class HashSet<V> implements Hashable {
     return true;
   }
 
-  public isSubsetOf(other: Iterable<V>) {
+  public isSubsetOf(other: Iterable<V>): boolean {
     const s = new HashSet(this.values());
 
     for (const val of other) {
@@ -225,7 +225,7 @@ export class HashSet<V> implements Hashable {
     return s.size === 0;
   }
 
-  public isSupersetOf(other: Iterable<V>) {
+  public isSupersetOf(other: Iterable<V>): boolean {
     for (const val of other) {
       if (!this.has(val)) return false;
     }
@@ -233,7 +233,7 @@ export class HashSet<V> implements Hashable {
     return true;
   }
 
-  public isEqual(other: Iterable<V>) {
+  public isEqual(other: Iterable<V>): boolean {
     const s = new HashSet(this.values());
 
     for (const val of other) {
@@ -244,9 +244,9 @@ export class HashSet<V> implements Hashable {
     return s.size === 0;
   }
 
-  public symmetricDifference(other: Iterable<V>) {
+  public symmetricDifference(other: Iterable<V>): HashSet<V> {
     const s = new HashSet(this.values());
-    const t = new HashSet();
+    const t = new HashSet<V>();
 
     for (const val of other) {
       if (!s.has(val)) t.add(val);

@@ -42,6 +42,10 @@ const data = [
         title: "PDA to CFG",
         url: "/pda-cfg",
       },
+      {
+        title: "CFG Membership",
+        url: "/cfg-membership",
+      },
     ],
   },
 ];
