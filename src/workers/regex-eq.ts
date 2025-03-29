@@ -4,7 +4,7 @@
   self.onmessage = (e: MessageEvent<{ alphabet: string; regex1: string; regex2: string }>) => {
     const { alphabet, regex1, regex2 } = e.data;
 
-    const A = new HashSet(alphabet.split(","));
+    const A = new HashSet(alphabet.split(",").map((sym) => sym.trim()));
 
     try {
       const n1 = NFA.fromRegularExpression(A, regex1);

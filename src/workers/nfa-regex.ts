@@ -11,7 +11,7 @@
     const { alphabet, start, accept, nfa } = e.data;
 
     const M = new HashMap<string, number>();
-    const A = new HashSet(alphabet.split(","));
+    const A = new HashSet(alphabet.split(",").map((sym) => sym.trim()));
 
     const S = NFA.id;
     M.set(start.trim(), NFA.id++);

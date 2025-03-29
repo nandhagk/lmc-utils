@@ -11,7 +11,7 @@
     const { alphabet, start, accept, pda } = e.data;
 
     const M = new HashMap<string, number>();
-    const A = new HashSet(alphabet.split(","));
+    const A = new HashSet(alphabet.split(",").map((sym) => sym.trim()));
     const T = new HashSet<string>();
 
     const S = PDA.id;

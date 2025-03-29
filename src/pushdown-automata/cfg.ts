@@ -294,6 +294,101 @@ export class CFG {
     return c;
   }
 
+  public cnf() {
+    const start = "S0";
+
+    const [s] = this.variables;
+    this.variables = new HashSet([start, ...this.variables]);
+    this.productions.set(start, new HashSet([[s]]));
+
+    this.removeEpsilonRules();
+    this.removeUnitRules();
+
+    const cache = new HashMap<string[], string>();
+    for (const [variable, rules] of this.productions.entries()) {
+      if (rules.size !== 1) continue;
+
+      const [rule] = rules;
+      if (rule.length !== 1) continue;
+
+      if (this.alphabet.has(rule[0]) && !cache.has(rule)) cache.set(rule, variable);
+    }
+
+    let terminalIndex = 0;
+    for (const rules of [...this.productions.values()]) {
+      for (const rule of rules) {
+        if (CFG.isEpsilonRule(rule)) continue;
+        for (const sym of rule) {
+          if (this.alphabet.has(sym) && !cache.has([sym])) {
+            const terminalVariable = `U${++terminalIndex}`;
+            this.productions.set(terminalVariable, new HashSet([[sym]]));
+            this.variables.add(terminalVariable);
+            cache.set([sym], terminalVariable);
+          }
+        }
+      }
+    }
+
+    for (const [variable, rules] of this.productions.entries())
+      this.productions.set(
+        variable,
+        new HashSet(
+          rules
+            .values()
+            .map((rule) =>
+              rule.length === 1 ? rule : rule.map((sym) => (this.variables.has(sym) || cache.get([sym]) === variable ? sym : cache.get([sym])!))
+            )
+        )
+      );
+
+    for (const variable of [...this.variables].toReversed()) {
+      const rules = [...this.productions.get(variable)!];
+      const newRules = new HashSet<string[]>();
+
+      let helperIndex = 0;
+      for (const rule of rules) {
+        if (rule.length <= 2) {
+          newRules.add(rule);
+          continue;
+        }
+
+        const left = rule.slice(1);
+        if (cache.has(left)) {
+          newRules.add([rule[0], cache.get(left)!]);
+          continue;
+        }
+
+        let prvVariable = `${variable}${++helperIndex}`;
+        this.variables.add(prvVariable);
+        newRules.add([rule[0], prvVariable]);
+        cache.set(left, prvVariable);
+
+        for (let i = 1; i < rule.length - 1; ++i) {
+          if (i === rule.length - 2) {
+            this.productions.set(prvVariable, new HashSet([[rule[i], rule[i + 1]]]));
+            break;
+          }
+
+          const left = rule.slice(i + 1);
+          if (cache.has(left)) {
+            this.productions.set(prvVariable, new HashSet([[rule[i], cache.get(left)!]]));
+            break;
+          }
+
+          const newVariable = `${variable}${++helperIndex}`;
+          this.variables.add(newVariable);
+          this.productions.set(prvVariable, new HashSet([[rule[i], newVariable]]));
+          cache.set(left, newVariable);
+          prvVariable = newVariable;
+        }
+      }
+
+      this.productions.set(variable, newRules);
+    }
+
+    this.simplify();
+  }
+
   public toString() {
     return [
       ...this.variables.values().map(
