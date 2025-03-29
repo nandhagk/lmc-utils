@@ -56,10 +56,10 @@ export function GraphCanvas({ graph, selected }: Props) {
     animateGraph(canvas, ctx);
   }, []);
 
-  useEffect(() => {
-    const g = new Map([[0, { graphEdges: parseGraphInputEdges("", graph.replaceAll(ALT_EPSILON, EPSILON), 0).graph!, selected }]]);
-    updateGraph(g);
-  }, [selected, graph]);
+  useEffect(
+    () => updateGraph(new Map([[0, { graphEdges: parseGraphInputEdges("", graph.replaceAll(ALT_EPSILON, EPSILON), 0).graph!, selected }]])),
+    [selected, graph]
+  );
 
   return (
     <div className="min-w-[300px] h-96 md:h-full flex-1 border-2 border-white rounded-lg">

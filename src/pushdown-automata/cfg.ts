@@ -201,21 +201,27 @@ export class CFG {
   }
 
   public static fromCFG(alphabet: HashSet<string>, text: string) {
-    const productions = new DefaultHashMap<string, HashSet<string[]>>(
-      () => new HashSet(),
-      text
-        .split("\n")
-        .map((production) => production.split("->"))
-        .map(([variable, rules]) => [
-          variable.trim(),
-          new HashSet(
+    const productions = new DefaultHashMap<string, HashSet<string[]>>(() => new HashSet());
+
+    const cfg = text
+      .split("\n")
+      .map((production) => production.split("->"))
+      .map(
+        ([variable, rules]) =>
+          [
+            variable.trim(),
             rules
               .split("|")
               .map((rule) => rule.trim().replaceAll(ALT_EPSILON, EPSILON).split(" "))
-              .map((rule) => (this.isEpsilonRule(rule) ? rule : rule.filter((sym) => sym !== EPSILON)))
-          ),
-        ])
-    );
+              .map((rule) => (this.isEpsilonRule(rule) ? rule : rule.filter((sym) => sym !== EPSILON))),
+          ] as [string, string[][]]
+      );
+
+    for (const [variable, rules] of cfg) {
+      for (const rule of rules) {
+        productions.get(variable).add(rule);
+      }
+    }
 
     const variables = new HashSet(productions.keys());
     for (const rules of productions.values()) {
@@ -231,7 +237,6 @@ export class CFG {
 
   public static fromPDA(p: PDA) {
     const z = PDA.toCFG(p);
-    console.log({ z });
 
     const Q = z.Q;
     const D = z.D;
@@ -308,6 +313,18 @@ export class CFG {
 
     c.rename();
     return c;
+  }
+
+  public toString() {
+    return [
+      ...this.variables.values().map(
+        (variable) =>
+          `${variable}\t-> ${[...this.productions.get(variable)]
+            .toSorted()
+            .map((rule) => rule.join(" "))
+            .join(" | ")}`
+      ),
+    ].join("\n");
   }
 
   public cnf() {
@@ -403,17 +420,5 @@ export class CFG {
     }
 
     this.simplify();
-  }
-
-  public toString() {
-    return [
-      ...this.variables.values().map(
-        (variable) =>
-          `${variable}\t-> ${[...this.productions.get(variable)]
-            .toSorted()
-            .map((rule) => rule.join(" "))
-            .join(" | ")}`
-      ),
-    ].join("\n");
   }
 }
