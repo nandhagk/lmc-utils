@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -27,7 +28,13 @@ export function NFARegex() {
       alphabet: "a,b",
       start: "q1",
       accept: "q1,q3",
-      nfa: "q1 q2 a,b\nq2 q2 a\nq2 q3 b\nq3 q2 b\nq3 q1 a",
+      nfa: `
+q1 q2 a
+q1 q2 b
+q2 q2 a
+q2 q3 b
+q3 q2 b
+q3 q1 a`.trim(),
     },
   });
 
@@ -135,9 +142,9 @@ export function NFARegex() {
                       name="nfa"
                       render={({ field }) => (
                         <FormItem>
-                          <FormControl>
+                          <ScrollArea type="auto" className="max-h-36">
                             <Textarea id="nfa" placeholder="NFA" {...field} className="min-h-36 font-mono" />
-                          </FormControl>
+                          </ScrollArea>
                         </FormItem>
                       )}
                     />

@@ -65,30 +65,29 @@ export class CFG {
       const entry = this.productions
         .entries()
         .find(([variable, rules]) => variable !== start && rules.values().find((rule) => CFG.isEpsilonRule(rule)));
-
       if (entry === undefined) break;
-      const [epsilonVariable, rules] = entry;
 
-      this.productions.set(epsilonVariable, new HashSet(rules.values().filter((rule) => !CFG.isEpsilonRule(rule))));
+      const [variable, rules] = entry;
 
-      hasRemovedEpsilonRule.add(epsilonVariable);
+      this.productions.set(variable, new HashSet(rules.values().filter((rule) => !CFG.isEpsilonRule(rule))));
+      hasRemovedEpsilonRule.add(variable);
 
-      for (const [variable, rules] of this.productions.entries())
+      for (const [v, rules] of this.productions.entries())
         this.productions.set(
-          variable,
+          v,
           new HashSet(
             rules
               .values()
               .flatMap((rule) =>
                 rule
                   .map((sym, i) => [sym, i] as [string, number])
-                  .filter(([sym]) => sym === epsilonVariable)
+                  .filter(([sym]) => sym === variable)
                   .map(([, i]) => i)
                   .reduce((subsets, value) => subsets.concat(subsets.map((set) => new HashSet([value, ...set]))), [new HashSet<number>()])
-                  .map((positions) => rule.filter((sym, i) => sym !== epsilonVariable || positions.has(i)))
+                  .map((positions) => rule.filter((sym, i) => sym !== variable || positions.has(i)))
                   .map((rule) => (rule.length === 0 ? [EPSILON] : rule))
               )
-              .filter((rule) => !CFG.isEpsilonRule(rule) || !hasRemovedEpsilonRule.has(variable))
+              .filter((rule) => !CFG.isEpsilonRule(rule) || !hasRemovedEpsilonRule.has(v))
           )
         );
     }
@@ -116,7 +115,38 @@ export class CFG {
     }
   }
 
+  public replaceSingletonRules() {
+    const [start] = this.variables;
+    for (const [variable, rules] of this.productions.entries()) {
+      if (rules.size !== 1) continue;
+
+      const [rule] = rules;
+      if (rule.length !== 1) continue;
+
+      if (variable === start) continue;
+
+      this.variables.delete(variable);
+      this.productions.delete(variable);
+
+      for (const [v, rs] of this.productions.entries()) {
+        this.productions.set(
+          v,
+          new HashSet(
+            rs
+              .values()
+              .map((r) => r.map((s) => (s === variable ? rule[0] : s)))
+              .map((rule) => (CFG.isEpsilonRule(rule) ? rule : rule.filter((sym) => sym !== EPSILON)))
+          )
+        );
+      }
+    }
+  }
+
   public simplify() {
+    for (const [variable, rules] of this.productions.entries()) {
+      this.productions.set(variable, new HashSet(rules.values().filter((rule) => !(this.isUnitRule(rule) && rule[0] === variable))));
+    }
+
     const [start] = this.variables.values();
 
     const generating = this.generating();
@@ -134,12 +164,11 @@ export class CFG {
       this.productions.delete(variable);
     }
 
-    for (const [variable, rules] of [...this.productions.entries()]) {
+    for (const [variable, rules] of this.productions.entries()) {
       this.productions.set(variable, new HashSet(rules.values().filter((rule) => rule.every((sym) => generating.has(sym)))));
     }
 
     const reachable = this.reachable();
-
     for (const variable of [...this.variables]) {
       if (reachable.has(variable)) continue;
 
@@ -147,15 +176,8 @@ export class CFG {
       this.productions.delete(variable);
     }
 
-    for (const [variable, rules] of [...this.productions.entries()]) {
+    for (const [variable, rules] of this.productions.entries()) {
       this.productions.set(variable, new HashSet(rules.values().filter((rule) => rule.every((sym) => reachable.has(sym)))));
-    }
-
-    for (const [variable, rules] of [...this.productions.entries()]) {
-      this.productions.set(
-        variable,
-        new HashSet(rules.values().map((rule) => (CFG.isEpsilonRule(rule) ? rule : rule.filter((sym) => sym !== EPSILON))))
-      );
     }
   }
 
@@ -186,7 +208,12 @@ export class CFG {
         .map((production) => production.split("->"))
         .map(([variable, rules]) => [
           variable.trim(),
-          new HashSet(rules.split("|").map((rule) => rule.trim().replaceAll(ALT_EPSILON, EPSILON).split(" "))),
+          new HashSet(
+            rules
+              .split("|")
+              .map((rule) => rule.trim().replaceAll(ALT_EPSILON, EPSILON).split(" "))
+              .map((rule) => (this.isEpsilonRule(rule) ? rule : rule.filter((sym) => sym !== EPSILON)))
+          ),
         ])
     );
 
@@ -204,6 +231,7 @@ export class CFG {
 
   public static fromPDA(p: PDA) {
     const z = PDA.toCFG(p);
+    console.log({ z });
 
     const Q = z.Q;
     const D = z.D;
@@ -225,7 +253,12 @@ export class CFG {
       for (const u of T) {
         for (const [a, b] of product([...A, EPSILON], [...A, EPSILON])) {
           if (D.get([p, a, EPSILON]).has([r, u]) && D.get([s, b, u]).has([q, EPSILON])) {
-            productions.get(fv(p, q)).add([a, fv(r, s), b]);
+            const rule = [];
+            if (a !== EPSILON) rule.push(a);
+            rule.push(fv(r, s));
+            if (b !== EPSILON) rule.push(b);
+
+            productions.get(fv(p, q)).add(rule);
           }
         }
       }
@@ -242,26 +275,19 @@ export class CFG {
     const c = new CFG(A, variables, productions);
 
     c.simplify();
-    c.removeEpsilonRules();
+    for (const [variable, rules] of c.productions.entries()) {
+      if (rules.size !== 2) continue;
+      if (!rules.isEqual([[variable, variable], [EPSILON]])) continue;
 
-    // c.removeUnitRules();
-    for (const [variable, rules] of [...c.productions.entries()]) {
-      c.productions.set(variable, new HashSet(rules.values().filter((rule) => !(c.isUnitRule(rule) && rule[0] === variable))));
+      c.productions.set(variable, new HashSet([[EPSILON]]));
     }
 
     c.simplify();
-    for (const variable of [...c.variables]) {
-      const rules = c.productions.get(variable);
-      if (rules.size !== 1) continue;
 
-      const [rule] = rules;
-      if (!c.isUnitRule(rule)) continue;
-
-      c.variables.delete(variable);
-      c.productions.delete(variable);
-      for (const [v, rs] of [...c.productions.entries()]) {
-        c.productions.set(v, new HashSet(rs.values().map((r) => r.map((s) => (s === variable ? rule[0] : s)))));
-      }
+    const [start] = c.variables;
+    while (c.productions.entries().find(([variable, rules]) => variable !== start && rules.size === 1 && [...rules][0].length === 1) !== undefined) {
+      c.replaceSingletonRules();
+      c.simplify();
     }
 
     c.rename();
@@ -271,8 +297,8 @@ export class CFG {
   public toString() {
     return [
       ...this.variables.values().map(
-        (v) =>
-          `${v}\t-> ${[...this.productions.get(v)]
+        (variable) =>
+          `${variable}\t-> ${[...this.productions.get(variable)]
             .toSorted()
             .map((rule) => rule.join(" "))
             .join(" | ")}`

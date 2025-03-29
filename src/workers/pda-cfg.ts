@@ -30,7 +30,7 @@
     const Q = new HashSet<number>([...F]);
     const D = new DefaultHashMap(() => new HashSet<[number, string]>());
 
-    for (const line of pda.split("\n")) {
+    for (const line of pda.trim().split("\n")) {
       const [q, r, ...a] = line.split(" ").map((b) => b.trim());
       if (!M.has(q)) M.set(q, PDA.id++);
       if (!M.has(r)) M.set(r, PDA.id++);

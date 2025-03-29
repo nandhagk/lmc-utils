@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -24,10 +25,22 @@ export function PDACFG() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      alphabet: "a,b",
-      start: "q0",
-      accept: "q3",
-      pda: "q0 q1 ~,~ -> $\nq1 q1 a,~ -> 2\nq1 q1 a,~ -> 3\nq1 q2 ~,~ -> ~\nq2 q2 b,1 -> ~\nq2 q2 b,2 -> 1\nq2 q2 b,3 -> 2\nq2 q3 ~,$ -> ~",
+      alphabet: "a,b,c",
+      start: "q1",
+      accept: "q4,q7",
+      pda: `
+q1 q2 ~,~ -> $
+q2 q2 a,~ -> a
+q2 q3 ~,~ -> ~
+q3 q3 b,a -> ~
+q3 q4 ~,$ -> ~
+q4 q4 c,~ -> ~
+q2 q5 ~,~ -> ~
+q5 q5 b,~ -> ~
+q5 q6 ~,~ -> ~
+q6 q6 c,a -> ~
+q6 q7 ~,$ -> ~
+      `.trim(),
     },
   });
 
@@ -136,7 +149,9 @@ export function PDACFG() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Textarea id="pda" placeholder="PDA" {...field} className="min-h-36 font-mono" />
+                            <ScrollArea type="auto" className="max-h-36">
+                              <Textarea id="pda" placeholder="PDA" {...field} className="min-h-36 font-mono" />
+                            </ScrollArea>
                           </FormControl>
                         </FormItem>
                       )}

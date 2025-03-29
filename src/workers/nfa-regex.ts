@@ -29,7 +29,7 @@
     const Q = new HashSet<number>([...F]);
     const D = new DefaultHashMap(() => new HashSet<number>());
 
-    for (const line of nfa.split("\n")) {
+    for (const line of nfa.trim().split("\n")) {
       const [q, r, a] = line.split(" ").map((b) => b.trim());
       if (!M.has(q)) M.set(q, NFA.id++);
       if (!M.has(r)) M.set(r, NFA.id++);
@@ -40,12 +40,7 @@
       Q.add(x);
       Q.add(y);
 
-      for (const b of a
-        .replaceAll(ALT_EPSILON, EPSILON)
-        .split(",")
-        .map((c) => c.trim())) {
-        D.get([x, b]).add(y);
-      }
+      D.get([x, a.replaceAll(ALT_EPSILON, EPSILON).trim()]).add(y);
     }
 
     try {

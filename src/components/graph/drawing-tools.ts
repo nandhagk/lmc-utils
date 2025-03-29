@@ -113,11 +113,11 @@ export function drawEdgeLabel(
   ctx.textBaseline = "middle";
   ctx.textAlign = "center";
 
-  ctx.font = `${settings.fontSize - 2}px CustomFont`;
+  ctx.font = `${Math.round(settings.fontSize * 0.8)}px CustomFont`;
   ctx.fillStyle = edgeLabelColor;
 
   if (u.x === v.x && u.y === v.y) {
-    ctx.fillText(label, u.x, u.y - r * 25 - 65);
+    ctx.fillText(label, u.x, u.y - r * 25 - 75);
   } else {
     ctx.fillText(label, mx + px, my + py);
   }

@@ -50,7 +50,7 @@ export function GraphCanvas({ graph, selected }: Props) {
       nodeRadius: 25,
       fontSize: 20,
       nodeBorderWidthHalf: 1,
-      edgeLength: 120,
+      edgeLength: 125,
       edgeLabelSeparation: 20,
     });
     animateGraph(canvas, ctx);
