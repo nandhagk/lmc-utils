@@ -235,7 +235,6 @@ export class CFG {
 
     const Q = z.Q;
     const D = z.D;
-    const T = z.T;
     const A = z.A;
     const S = z.S;
     const [F] = z.F;
@@ -249,10 +248,27 @@ export class CFG {
 
     const productions = new DefaultHashMap<string, HashSet<string[]>>(() => new HashSet());
 
-    for (const [p, q, r, s] of product(Q, Q, Q, Q)) {
-      for (const u of T) {
-        for (const [a, b] of product([...A, EPSILON], [...A, EPSILON])) {
-          if (D.get([p, a, EPSILON]).has([r, u]) && D.get([s, b, u]).has([q, EPSILON])) {
+    const peeker = new DefaultHashMap<[number, string], HashSet<[number, string]>>(() => new HashSet());
+    const popper = new DefaultHashMap<number, HashSet<[number, string, string]>>(() => new HashSet());
+
+    for (const [[cur, sym, pop], cs] of D.entries()) {
+      for (const [nxt, push] of cs) {
+        if (pop === EPSILON && push !== EPSILON) {
+          peeker.get([nxt, push]).add([cur, sym]);
+        } else if (pop !== EPSILON && push === EPSILON) {
+          popper.get(nxt).add([cur, sym, pop]);
+        } else {
+          throw new Error("HOW");
+        }
+      }
+    }
+
+    for (const [[r, u], cs] of peeker.entries()) {
+      for (const [p, a] of cs) {
+        for (const [q, ds] of popper.entries()) {
+          for (const [s, b, v] of ds) {
+            if (u !== v) continue;
+
             const rule = [];
             if (a !== EPSILON) rule.push(a);
             rule.push(fv(r, s));

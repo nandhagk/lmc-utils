@@ -58,7 +58,6 @@ export function GraphCanvas({ graph, selected }: Props) {
 
   useEffect(() => {
     const g = new Map([[0, { graphEdges: parseGraphInputEdges("", graph.replaceAll(ALT_EPSILON, EPSILON), 0).graph!, selected }]]);
-    console.log({ graph, g });
     updateGraph(g);
   }, [selected, graph]);
 
