@@ -7,11 +7,11 @@
     import("@/lib/hash"),
   ]);
 
-  self.onmessage = (e: MessageEvent<{ alphabet: string; start: string; accept: string; nfa: string }>) => {
-    const { alphabet, start, accept, nfa } = e.data;
+  self.onmessage = (e: MessageEvent<{ start: string; accept: string; nfa: string }>) => {
+    const { start, accept, nfa } = e.data;
 
     const M = new HashMap<string, number>();
-    const A = new HashSet(alphabet.split(",").map((sym) => sym.trim()));
+    const A = new HashSet<string>();
 
     const S = NFA.id;
     M.set(start.trim(), NFA.id++);
@@ -40,7 +40,10 @@
       Q.add(x);
       Q.add(y);
 
-      D.get([x, a.replaceAll(ALT_EPSILON, EPSILON).trim()]).add(y);
+      const b = a.replaceAll(ALT_EPSILON, EPSILON).trim();
+
+      if (b !== EPSILON) A.add(b);
+      D.get([x, b]).add(y);
     }
 
     try {

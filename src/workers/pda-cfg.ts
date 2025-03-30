@@ -6,11 +6,11 @@
     import("@/lib/hash"),
   ]);
 
-  self.onmessage = (e: MessageEvent<{ alphabet: string; start: string; accept: string; pda: string }>) => {
-    const { alphabet, start, accept, pda } = e.data;
+  self.onmessage = (e: MessageEvent<{ start: string; accept: string; pda: string }>) => {
+    const { start, accept, pda } = e.data;
 
     const M = new HashMap<string, number>();
-    const A = new HashSet(alphabet.split(",").map((sym) => sym.trim()));
+    const A = new HashSet<string>();
     const T = new HashSet<string>();
 
     const S = PDA.id;
@@ -44,6 +44,7 @@
       const [u, v] = b.split("->").map((z) => z.trim());
       const [s, t] = u.split(",").map((z) => z.trim());
 
+      if (s !== EPSILON) A.add(s);
       if (t !== EPSILON) T.add(t);
       if (v !== EPSILON) T.add(v);
 

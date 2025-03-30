@@ -15,7 +15,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 
 const FormSchema = z.object({
-  alphabet: z.string(),
   start: z.string(),
   accept: z.string(),
   pda: z.string(),
@@ -25,7 +24,6 @@ export function PDACFG() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      alphabet: "a,b",
       start: "q1",
       accept: "q4",
       pda: `
@@ -97,20 +95,6 @@ q3 q4 ~,$ -> ~
                     <p className="text-balance text-muted-foreground">Find CFG accepted by PDA</p>
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="alphabet">Alphabet</Label>
-                    <FormField
-                      control={form.control}
-                      name="alphabet"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Input id="alphabet" className="font-mono" placeholder="Alphabet" {...field} />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="grid gap-2">
                     <Label htmlFor="start">Start</Label>
                     <FormField
                       control={form.control}
@@ -146,8 +130,8 @@ q3 q4 ~,$ -> ~
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <ScrollArea type="auto" className="max-h-36">
-                              <Textarea id="pda" placeholder="PDA" {...field} className="min-h-36 font-mono" />
+                            <ScrollArea type="auto" className="max-h-60">
+                              <Textarea id="pda" placeholder="PDA" {...field} className="min-h-60 font-mono" />
                             </ScrollArea>
                           </FormControl>
                         </FormItem>

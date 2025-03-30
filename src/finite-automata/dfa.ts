@@ -124,4 +124,15 @@ export class DFA {
 
     return null;
   }
+
+  public accepts(test: string): boolean {
+    if (!this.A.isSupersetOf(test)) return false;
+
+    let cur = this.S;
+    for (const sym of test) {
+      cur = this.D.get([cur, sym])!;
+    }
+
+    return this.F.has(cur);
+  }
 }
