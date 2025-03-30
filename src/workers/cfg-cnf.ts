@@ -6,8 +6,7 @@
 
     const A = new HashSet(alphabet.split(",").map((sym) => sym.trim()));
     try {
-      const c = CFG.fromCFG(A, cfg);
-      c.cnf();
+      const c = CFG.fromCFG(A, cfg).toCNF();
 
       self.postMessage({ success: true, cnf: c.toString() });
     } catch (error) {

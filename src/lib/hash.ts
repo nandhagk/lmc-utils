@@ -113,10 +113,12 @@ export class HashMap<K, V> implements Hashable {
     return this.#keys.has(hash(key));
   }
 
-  public set(key: K, val: V): void {
+  public set(key: K, val: V): HashMap<K, V> {
     const k = hash(key);
     this.#keys.set(k, key);
     this.#vals.set(k, val);
+
+    return this;
   }
 
   public delete(key: K): boolean {
@@ -163,8 +165,10 @@ export class HashSet<V> implements Hashable {
     this.#vals.clear();
   }
 
-  public add(val: V): void {
+  public add(val: V): HashSet<V> {
     this.#vals.set(hash(val), val);
+
+    return this;
   }
 
   public has(val: V): boolean {

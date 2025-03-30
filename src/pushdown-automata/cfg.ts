@@ -3,205 +3,362 @@ import { DefaultHashMap, HashMap, HashSet } from "@/lib/hash";
 import { product } from "@/lib/utils";
 import { PDA } from "@/pushdown-automata/pda";
 
-export class CFG {
-  public constructor(
-    public alphabet: HashSet<string>,
-    public variables: HashSet<string>,
-    public productions: DefaultHashMap<string, HashSet<string[]>>
-  ) {}
+export type Rule = string[];
 
-  public static isEpsilonRule(rule: string[]) {
+export class CFG {
+  public constructor(public T: HashSet<string>, public V: HashSet<string>, public S: string, public P: DefaultHashMap<string, HashSet<Rule>>) {}
+
+  public isEpsilonRule(rule: Rule): boolean {
     return rule.length === 1 && rule[0] === EPSILON;
   }
 
-  public isUnitRule(rule: string[]) {
-    return rule.length === 1 && this.variables.has(rule[0]);
+  public isUnitRule(rule: Rule): boolean {
+    return rule.length === 1 && this.V.has(rule[0]);
   }
 
-  public generating() {
-    const generating = new HashSet([...this.alphabet, EPSILON]);
+  public isSelfRecursiveUnitRule(variable: string, rule: Rule): boolean {
+    return this.isUnitRule(rule) && rule[0] === variable;
+  }
+
+  public findGeneratingVariables(): HashSet<string> {
+    const G = new HashSet<string>();
 
     for (;;) {
-      const entry = this.productions
-        .entries()
-        .filter(([variable]) => !generating.has(variable))
-        .find(([, rules]) => rules.values().find((rule) => generating.isSupersetOf(rule)));
+      const entry = this.P.entries()
+        .filter(([variable]) => !G.has(variable))
+        .find(([, rules]) => rules.values().find((rule) => rule.every((sym) => !this.V.has(sym) || G.has(sym))));
       if (entry === undefined) break;
 
       const [variable] = entry;
-      generating.add(variable);
+      G.add(variable);
     }
 
-    return generating;
+    return G;
   }
 
-  public reachable() {
-    const [start] = this.variables.values();
+  public findReachableVariables(): HashSet<string> {
+    const R = new HashSet<string>([this.S]);
 
-    const reachable = new HashSet<string>([start]);
-    const stk = [start];
-
+    const stk = [this.S];
     while (stk.length !== 0) {
       const variable = stk.pop()!;
 
-      for (const rule of this.productions.get(variable)) {
+      for (const rule of this.P.get(variable)) {
         for (const sym of rule) {
-          if (!reachable.has(sym)) {
-            reachable.add(sym);
-            if (this.variables.has(sym)) stk.push(sym);
-          }
+          if (!this.V.has(sym) || R.has(sym)) continue;
+
+          R.add(sym);
+          stk.push(sym);
         }
       }
     }
 
-    return reachable;
+    return R;
   }
 
-  public removeEpsilonRules() {
-    const [start] = this.variables;
-    const hasRemovedEpsilonRule = new HashSet<string>();
+  public findNullableVariables(): HashSet<string> {
+    const N = new HashSet<string>();
 
     for (;;) {
-      const entry = this.productions
-        .entries()
-        .find(([variable, rules]) => variable !== start && rules.values().find((rule) => CFG.isEpsilonRule(rule)));
+      const entry = this.P.entries()
+        .filter(([variable]) => !N.has(variable))
+        .find(([, rules]) => rules.values().find((rule) => rule.every((sym) => sym === EPSILON || N.has(sym))));
       if (entry === undefined) break;
 
-      const [variable, rules] = entry;
+      const [variable] = entry;
+      N.add(variable);
+    }
 
-      this.productions.set(variable, new HashSet(rules.values().filter((rule) => !CFG.isEpsilonRule(rule))));
-      hasRemovedEpsilonRule.add(variable);
+    return N;
+  }
 
-      for (const [v, rules] of this.productions.entries())
-        this.productions.set(
-          v,
+  public findNullVariables(): HashSet<string> {
+    const E = new HashSet<string>();
+
+    for (;;) {
+      const entry = this.P.entries()
+        .filter(([variable]) => !E.has(variable))
+        .find(([, rules]) => rules.values().find((rule) => rule.some((sym) => this.T.has(sym) || E.has(sym))));
+      if (entry === undefined) break;
+
+      const [variable] = entry;
+      E.add(variable);
+    }
+
+    return this.V.difference(E);
+  }
+
+  public eliminateNonGeneratingVariables(): CFG {
+    const T = this.T;
+    const U = this.V;
+    const S = this.S;
+    const O = this.P;
+
+    const G = this.findGeneratingVariables();
+
+    const V = new HashSet([S, ...G]);
+    const P = new DefaultHashMap<string, HashSet<Rule>>(
+      () => new HashSet(),
+      O.entries()
+        .filter(([variable]) => V.has(variable))
+        .map(([variable, rules]) => [variable, new HashSet(rules.values().filter((rule) => rule.every((sym) => !U.has(sym) || G.has(sym))))])
+    );
+
+    return new CFG(T, V, S, P);
+  }
+
+  public eliminateUnreachableVariables(): CFG {
+    const T = this.T;
+    const U = this.V;
+    const S = this.S;
+    const O = this.P;
+
+    const R = this.findReachableVariables();
+
+    const V = new HashSet(R);
+    const P = new DefaultHashMap<string, HashSet<Rule>>(
+      () => new HashSet(),
+      O.entries()
+        .filter(([variable]) => V.has(variable))
+        .map(([variable, rules]) => [variable, new HashSet(rules.values().filter((rule) => rule.every((sym) => !U.has(sym) || R.has(sym))))])
+    );
+
+    return new CFG(T, V, S, P);
+  }
+
+  public eliminateSelfRecursiveUnitRules(): CFG {
+    const T = this.T;
+    const V = this.V;
+    const S = this.S;
+    const O = this.P;
+
+    const P = new DefaultHashMap<string, HashSet<Rule>>(
+      () => new HashSet(),
+      O.entries().map(([variable, rules]) => [variable, new HashSet(rules.values().filter((rule) => !this.isSelfRecursiveUnitRule(variable, rule)))])
+    );
+
+    return new CFG(T, V, S, P);
+  }
+
+  public eliminateDelegatingVariables(): CFG {
+    const T = this.T;
+    const U = this.V;
+    const S = this.S;
+    const O = this.P;
+
+    const V = new HashSet(U);
+
+    let P = new DefaultHashMap<string, HashSet<Rule>>(() => new HashSet(), O);
+    for (;;) {
+      const entry = P.entries().find(([variable, rules]) => {
+        if (rules.size !== 1) return false;
+
+        const [rule] = rules;
+        return this.isUnitRule(rule) && !this.isSelfRecursiveUnitRule(variable, rule);
+      });
+      if (entry === undefined) break;
+
+      const [delegatingVariable, rules] = entry;
+      const [rule] = rules;
+      const [delegatedVariable] = rule;
+
+      P.set(delegatingVariable, P.get(delegatedVariable));
+
+      V.delete(delegatedVariable);
+      P.delete(delegatedVariable);
+
+      P = new DefaultHashMap<string, HashSet<Rule>>(
+        () => new HashSet(),
+        P.entries().map(([variable, rules]) => [
+          variable,
+          new HashSet(rules.values().map((rule) => rule.map((sym) => (sym === delegatedVariable ? delegatingVariable : sym)))),
+        ])
+      );
+    }
+
+    return new CFG(T, V, S, P);
+  }
+
+  public eliminateSingleRuleVariables(): CFG {
+    const T = this.T;
+    const U = this.V;
+    const S = this.S;
+    const O = this.P;
+
+    const V = new HashSet(U);
+
+    let P = new DefaultHashMap<string, HashSet<Rule>>(() => new HashSet(), O);
+    for (;;) {
+      const entry = P.entries().find(([variable, rules]) => {
+        if (rules.size !== 1) return false;
+
+        const [rule] = rules;
+        return !this.isSelfRecursiveUnitRule(variable, rule);
+      });
+
+      if (entry === undefined) break;
+
+      const [singleRuleVariable, rules] = entry;
+      const [singleRule] = rules;
+
+      V.delete(singleRuleVariable);
+      P.delete(singleRuleVariable);
+
+      P = new DefaultHashMap<string, HashSet<Rule>>(
+        () => new HashSet(),
+        P.entries().map(([variable, rules]) => [
+          variable,
+          new HashSet(rules.values().map((rule) => rule.flatMap((sym) => (sym === singleRuleVariable ? singleRule : sym)))),
+        ])
+      );
+    }
+
+    return new CFG(T, V, S, P);
+  }
+
+  public eliminateNullVariables(): CFG {
+    const T = this.T;
+    const U = this.V;
+    const S = this.S;
+    const O = this.P;
+
+    const E = this.findNullVariables();
+
+    const V = new HashSet([S, ...U.values().filter((variable) => !E.has(variable))]);
+    const P = new DefaultHashMap<string, HashSet<Rule>>(
+      () => new HashSet(),
+      O.entries()
+        .filter(([variable]) => !E.has(variable))
+        .map(([variable, rules]) => [
+          variable,
+          new HashSet(
+            rules
+              .values()
+              .map((rule) => rule.filter((sym) => !U.has(sym) || !E.has(sym)))
+              .map((rule) => (rule.length === 0 ? [EPSILON] : rule))
+          ),
+        ])
+    );
+
+    return new CFG(T, V, S, P);
+  }
+
+  public renameVariables(): CFG {
+    const T = this.T;
+    const U = this.V;
+    const R = this.S;
+    const O = this.P;
+
+    const M = new HashMap<string, string>();
+
+    let id = 0;
+    for (const variable of U) M.set(variable, String.fromCharCode(65 + id++));
+
+    const V = new HashSet(U.values().map((variable) => M.get(variable)!));
+    const S = M.get(R)!;
+    const P = new DefaultHashMap<string, HashSet<Rule>>(
+      () => new HashSet(),
+      O.entries().map(([variable, rules]) => [
+        M.get(variable)!,
+        new HashSet(rules.values().map((rule) => rule.map((sym) => (U.has(sym) ? M.get(sym)! : sym)))),
+      ])
+    );
+
+    return new CFG(T, V, S, P);
+  }
+
+  public simplifyPassive(): CFG {
+    return this.eliminateNonGeneratingVariables().eliminateUnreachableVariables().eliminateSelfRecursiveUnitRules();
+  }
+
+  public simplifyAggressive(): CFG {
+    return this.simplifyPassive()
+      .eliminateDelegatingVariables()
+      .eliminateSingleRuleVariables()
+      .eliminateNullVariables()
+      .simplifyPassive()
+      .eliminateDelegatingVariables()
+      .eliminateSingleRuleVariables()
+      .renameVariables();
+  }
+
+  public eliminateEpsilonRules(): CFG {
+    const T = this.T;
+    const S = this.S;
+    const V = this.V;
+    const O = this.P;
+
+    const hasRemovedEpsilonRule = new HashSet<string>();
+
+    let P = new DefaultHashMap<string, HashSet<Rule>>(() => new HashSet(), O);
+    for (;;) {
+      const entry = P.entries()
+        .filter(([variable]) => variable !== S)
+        .find(([, rules]) => rules.values().find((rule) => this.isEpsilonRule(rule)));
+      if (entry === undefined) break;
+
+      const [epsilonVariable, rules] = entry;
+
+      P.set(epsilonVariable, new HashSet(rules.values().filter((rule) => !this.isEpsilonRule(rule))));
+      hasRemovedEpsilonRule.add(epsilonVariable);
+
+      P = new DefaultHashMap<string, HashSet<Rule>>(
+        () => new HashSet(),
+        P.entries().map(([variable, rules]) => [
+          variable,
           new HashSet(
             rules
               .values()
               .flatMap((rule) =>
                 rule
                   .map((sym, i) => [sym, i] as [string, number])
-                  .filter(([sym]) => sym === variable)
+                  .filter(([sym]) => sym === epsilonVariable)
                   .map(([, i]) => i)
                   .reduce((subsets, value) => subsets.concat(subsets.map((set) => new HashSet([value, ...set]))), [new HashSet<number>()])
-                  .map((positions) => rule.filter((sym, i) => sym !== variable || positions.has(i)))
+                  .map((positions) => rule.filter((sym, i) => sym !== epsilonVariable || positions.has(i)))
                   .map((rule) => (rule.length === 0 ? [EPSILON] : rule))
               )
-              .filter((rule) => !CFG.isEpsilonRule(rule) || !hasRemovedEpsilonRule.has(v))
-          )
-        );
+              .filter((rule) => !this.isEpsilonRule(rule) || !hasRemovedEpsilonRule.has(variable))
+          ),
+        ])
+      );
     }
+
+    return new CFG(T, V, S, P);
   }
 
-  public removeUnitRules() {
-    const hasRemovedUnitRule = new HashMap<string, HashSet<string>>(this.productions.keys().map((variable) => [variable, new HashSet()]));
+  public eliminateUnitRules(): CFG {
+    const T = this.T;
+    const V = this.V;
+    const S = this.S;
+    const O = this.P;
+
+    const hasRemovedUnitRule = new HashMap<string, HashSet<string>>(V.values().map((variable) => [variable, new HashSet()]));
+
+    const P = new DefaultHashMap<string, HashSet<Rule>>(() => new HashSet(), O);
     for (;;) {
-      const entry = this.productions.entries().find(([, rules]) => rules.values().find((rule) => this.isUnitRule(rule)));
+      const entry = P.entries().find(([, rules]) => rules.values().find((rule) => this.isUnitRule(rule)));
       if (entry === undefined) break;
 
       const [variable, rules] = entry;
-      const [unit] = rules.values().find((rule) => this.isUnitRule(rule))!;
+      const [unitVariable] = rules.values().find((rule) => this.isUnitRule(rule))!;
 
       const removedUnitRules = hasRemovedUnitRule.get(variable)!;
-      this.productions.set(
+      P.set(
         variable,
         new HashSet([
-          ...rules.values().filter((rule) => !(this.isUnitRule(rule) && rule[0] === unit)),
-          ...(removedUnitRules.has(unit) ? [] : this.productions.get(unit)!),
+          ...rules.values().filter((rule) => !(this.isUnitRule(rule) && rule[0] === unitVariable)),
+          ...(removedUnitRules.has(unitVariable) ? [] : P.get(unitVariable)!),
         ])
       );
 
-      removedUnitRules.add(unit);
+      removedUnitRules.add(unitVariable);
     }
+
+    return new CFG(T, V, S, P);
   }
 
-  public replaceSingletonRules() {
-    const [start] = this.variables;
-    for (const [variable, rules] of this.productions.entries()) {
-      if (rules.size !== 1) continue;
-
-      const [rule] = rules;
-      if (rule.length !== 1) continue;
-
-      if (variable === start) continue;
-
-      this.variables.delete(variable);
-      this.productions.delete(variable);
-
-      for (const [v, rs] of this.productions.entries()) {
-        this.productions.set(
-          v,
-          new HashSet(
-            rs
-              .values()
-              .map((r) => r.map((s) => (s === variable ? rule[0] : s)))
-              .map((rule) => (CFG.isEpsilonRule(rule) ? rule : rule.filter((sym) => sym !== EPSILON)))
-          )
-        );
-      }
-    }
-  }
-
-  public simplify() {
-    // Remove S -> S
-    for (const [variable, rules] of this.productions.entries()) {
-      this.productions.set(variable, new HashSet(rules.values().filter((rule) => !(this.isUnitRule(rule) && rule[0] === variable))));
-    }
-
-    const [start] = this.variables.values();
-
-    const generating = this.generating();
-    if (!generating.has(start)) {
-      this.variables.clear();
-      this.productions.clear();
-
-      return;
-    }
-
-    for (const variable of [...this.variables]) {
-      if (generating.has(variable)) continue;
-
-      this.variables.delete(variable);
-      this.productions.delete(variable);
-    }
-
-    for (const [variable, rules] of this.productions.entries()) {
-      this.productions.set(variable, new HashSet(rules.values().filter((rule) => rule.every((sym) => generating.has(sym)))));
-    }
-
-    const reachable = this.reachable();
-    for (const variable of [...this.variables]) {
-      if (reachable.has(variable)) continue;
-
-      this.variables.delete(variable);
-      this.productions.delete(variable);
-    }
-
-    for (const [variable, rules] of this.productions.entries()) {
-      this.productions.set(variable, new HashSet(rules.values().filter((rule) => rule.every((sym) => reachable.has(sym)))));
-    }
-  }
-
-  public rename() {
-    const M = new HashMap<string, string>();
-
-    let id = 0;
-    for (const variable of this.variables) M.set(variable, String.fromCharCode(65 + id++));
-
-    this.productions = new DefaultHashMap(
-      () => new HashSet(),
-      this.productions
-        .entries()
-        .map(([variable, rules]) => [
-          M.get(variable)!,
-          new HashSet(rules.values().map((rule) => rule.map((sym) => (this.variables.has(sym) ? M.get(sym)! : sym)))),
-        ])
-    );
-
-    this.variables = new HashSet(M.values());
-  }
-
-  public static fromCFG(alphabet: HashSet<string>, text: string) {
+  public static fromCFG(T: HashSet<string>, text: string) {
     const cfg = text
       .split("\n")
       .map((production) => production.split("->"))
@@ -212,46 +369,48 @@ export class CFG {
             rules
               .split("|")
               .map((rule) => rule.trim().replaceAll(ALT_EPSILON, EPSILON).split(" "))
-              .map((rule) => (this.isEpsilonRule(rule) ? rule : rule.filter((sym) => sym !== EPSILON))),
-          ] as [string, string[][]]
+              .map((rule) => (rule.length === 1 && rule[0] === EPSILON ? rule : rule.filter((sym) => sym !== EPSILON))),
+          ] as [string, Rule[]]
       );
 
-    const productions = new DefaultHashMap<string, HashSet<string[]>>(() => new HashSet());
+    const P = new DefaultHashMap<string, HashSet<Rule>>(() => new HashSet());
     for (const [variable, rules] of cfg) {
       for (const rule of rules) {
-        productions.get(variable).add(rule);
+        P.get(variable).add(rule);
       }
     }
 
-    const variables = new HashSet(productions.keys());
-    for (const rules of productions.values()) {
+    const V = new HashSet(P.keys());
+    for (const rules of P.values()) {
       for (const rule of rules) {
         for (const sym of rule) {
-          if (!alphabet.has(sym) && sym !== EPSILON) variables.add(sym);
+          if (!T.has(sym) && sym !== EPSILON) V.add(sym);
         }
       }
     }
 
-    return new CFG(alphabet, variables, productions);
+    const [S] = V;
+    return new CFG(T, V, S, P).simplifyPassive();
   }
 
-  public static fromPDA(p: PDA) {
+  public static fromPDA(p: PDA): CFG {
     const z = PDA.toCFG(p);
 
     const Q = z.Q;
     const D = z.D;
-    const A = z.A;
-    const S = z.S;
+    const T = z.A;
+    const R = z.S;
     const [F] = z.F;
 
     const fv = (cur: number, nxt: number) => `A${cur}${nxt}`;
 
-    const variables = new HashSet([fv(S, F)]);
+    const S = fv(R, F);
+    const V = new HashSet([S]);
     for (const [p, q] of product(Q, Q)) {
-      variables.add(fv(p, q));
+      V.add(fv(p, q));
     }
 
-    const productions = new DefaultHashMap<string, HashSet<string[]>>(() => new HashSet());
+    const P = new DefaultHashMap<string, HashSet<Rule>>(() => new HashSet());
 
     const peeker = new DefaultHashMap<[number, string], HashSet<[number, string]>>(() => new HashSet());
     const popper = new DefaultHashMap<number, HashSet<[number, string, string]>>(() => new HashSet());
@@ -279,47 +438,32 @@ export class CFG {
             rule.push(fv(r, s));
             if (b !== EPSILON) rule.push(b);
 
-            productions.get(fv(p, q)).add(rule);
+            P.get(fv(p, q)).add(rule);
           }
         }
       }
     }
 
     for (const [p, q, r] of product(Q, Q, Q)) {
-      productions.get(fv(p, q)).add([fv(p, r), fv(r, q)]);
+      P.get(fv(p, q)).add([fv(p, r), fv(r, q)]);
     }
 
     for (const p of Q) {
-      productions.get(fv(p, p)).add([EPSILON]);
+      P.get(fv(p, p)).add([EPSILON]);
     }
 
-    const c = new CFG(A, variables, productions);
-
-    c.simplify();
-    for (const [variable, rules] of c.productions.entries()) {
-      if (rules.size !== 2) continue;
-      if (!rules.isEqual([[variable, variable], [EPSILON]])) continue;
-
-      c.productions.set(variable, new HashSet([[EPSILON]]));
-    }
-
-    c.simplify();
-
-    const [start] = c.variables;
-    while (c.productions.entries().find(([variable, rules]) => variable !== start && rules.size === 1 && [...rules][0].length === 1) !== undefined) {
-      c.replaceSingletonRules();
-      c.simplify();
-    }
-
-    c.rename();
-    return c;
+    return new CFG(T, V, S, P).simplifyAggressive();
   }
 
-  public toString() {
+  public toString(): string {
+    const V = this.V;
+    const S = this.S;
+    const P = this.P;
+
     return [
-      ...this.variables.values().map(
+      ...new HashSet([S, ...V]).values().map(
         (variable) =>
-          `${variable}\t-> ${[...this.productions.get(variable)]
+          `${variable}\t-> ${[...P.get(variable)]
             .toSorted()
             .map((rule) => rule.join(" "))
             .join(" | ")}`
@@ -327,55 +471,72 @@ export class CFG {
     ].join("\n");
   }
 
-  public cnf() {
-    const start = "S0";
+  public toCNF(): CFG {
+    const T = this.T;
+    const U = this.V;
+    const R = this.S;
+    const O = this.P;
 
-    const [s] = this.variables;
-    this.variables = new HashSet([start, ...this.variables]);
-    this.productions.set(start, new HashSet([[s]]));
+    const S = "S0";
+    const V = new HashSet([S, ...U]);
 
-    this.removeEpsilonRules();
-    this.removeUnitRules();
+    const P = new DefaultHashMap<string, HashSet<Rule>>(() => new HashSet(), O);
+    P.set(S, new HashSet([[R]]));
 
-    const cache = new HashMap<string[], string>();
-    for (const [variable, rules] of this.productions.entries()) {
+    return new CFG(T, V, S, P).simplifyPassive().eliminateEpsilonRules().eliminateUnitRules().toCNFForm();
+  }
+
+  private toCNFForm(): CFG {
+    const T = this.T;
+    const U = this.V;
+    const S = this.S;
+    const O = this.P;
+
+    const V = new HashSet(U);
+    let P = new DefaultHashMap<string, HashSet<Rule>>(() => new HashSet(), O);
+
+    const cache = new HashMap<Rule, string>();
+    for (const [variable, rules] of P.entries()) {
       if (rules.size !== 1) continue;
 
       const [rule] = rules;
       if (rule.length !== 1) continue;
 
-      if (this.alphabet.has(rule[0]) && !cache.has(rule)) cache.set(rule, variable);
+      const [sym] = rule;
+      if (T.has(sym) && !cache.has(rule)) cache.set(rule, variable);
     }
 
     let terminalIndex = 0;
-    for (const rules of [...this.productions.values()]) {
+    for (const rules of [...P.values()]) {
       for (const rule of rules) {
-        if (CFG.isEpsilonRule(rule)) continue;
+        if (this.isEpsilonRule(rule)) continue;
         for (const sym of rule) {
-          if (this.alphabet.has(sym) && !cache.has([sym])) {
+          if (T.has(sym) && !cache.has([sym])) {
             const terminalVariable = `U${++terminalIndex}`;
-            this.productions.set(terminalVariable, new HashSet([[sym]]));
-            this.variables.add(terminalVariable);
+
+            P.set(terminalVariable, new HashSet([[sym]]));
+            V.add(terminalVariable);
+
             cache.set([sym], terminalVariable);
           }
         }
       }
     }
 
-    for (const [variable, rules] of this.productions.entries())
-      this.productions.set(
+    P = new DefaultHashMap<string, HashSet<Rule>>(
+      () => new HashSet(),
+      P.entries().map(([variable, rules]) => [
         variable,
         new HashSet(
           rules
             .values()
-            .map((rule) =>
-              rule.length === 1 ? rule : rule.map((sym) => (this.variables.has(sym) || cache.get([sym]) === variable ? sym : cache.get([sym])!))
-            )
-        )
-      );
+            .map((rule) => (rule.length === 1 ? rule : rule.map((sym) => (V.has(sym) || cache.get([sym]) === variable ? sym : cache.get([sym])!))))
+        ),
+      ])
+    );
 
-    for (const variable of [...this.variables].toReversed()) {
-      const rules = [...this.productions.get(variable)!];
+    for (const variable of [...V].toReversed()) {
+      const rules = [...P.get(variable)!];
       const newRules = new HashSet<string[]>();
 
       let helperIndex = 0;
@@ -392,33 +553,35 @@ export class CFG {
         }
 
         let prvVariable = `${variable}${++helperIndex}`;
-        this.variables.add(prvVariable);
+        V.add(prvVariable);
         newRules.add([rule[0], prvVariable]);
         cache.set(left, prvVariable);
 
         for (let i = 1; i < rule.length - 1; ++i) {
           if (i === rule.length - 2) {
-            this.productions.set(prvVariable, new HashSet([[rule[i], rule[i + 1]]]));
+            P.set(prvVariable, new HashSet([[rule[i], rule[i + 1]]]));
             break;
           }
 
           const left = rule.slice(i + 1);
           if (cache.has(left)) {
-            this.productions.set(prvVariable, new HashSet([[rule[i], cache.get(left)!]]));
+            P.set(prvVariable, new HashSet([[rule[i], cache.get(left)!]]));
             break;
           }
 
           const newVariable = `${variable}${++helperIndex}`;
-          this.variables.add(newVariable);
-          this.productions.set(prvVariable, new HashSet([[rule[i], newVariable]]));
+
+          V.add(newVariable);
+          P.set(prvVariable, new HashSet([[rule[i], newVariable]]));
+
           cache.set(left, newVariable);
           prvVariable = newVariable;
         }
       }
 
-      this.productions.set(variable, newRules);
+      P.set(variable, newRules);
     }
 
-    this.simplify();
+    return new CFG(T, V, S, P);
   }
 }

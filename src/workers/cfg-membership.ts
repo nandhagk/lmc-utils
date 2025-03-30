@@ -11,8 +11,6 @@
     const A = new HashSet(alphabet.split(",").map((sym) => sym.trim()));
     try {
       const c = CFG.fromCFG(A, cfg);
-      c.simplify();
-
       const recognizer = new Recognizer(c);
       self.postMessage({ success: true, isAccepted: recognizer.accepts(test) });
     } catch (error) {
