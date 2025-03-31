@@ -46,17 +46,18 @@ V -> 1 $ 1 | 0 V 0 | 1 V 1
   useEffect(() => {
     const worker = new Worker(new URL("@/workers/cfg-eq.ts", import.meta.url));
 
-    worker.onmessage = (e: MessageEvent<{ success: boolean; m1: string | null; m2: string | null }>) => {
+    worker.onmessage = (e: MessageEvent<{ success: boolean; m1: string | null; m2: string | null; length: number }>) => {
       const { success } = e.data;
 
       if (!success) {
         setIsOpen(false);
         toast.error("Parse failure!", { richColors: true });
       } else {
-        const { m1, m2 } = e.data;
+        const { m1, m2, length } = e.data;
 
         setM1(m1);
         setM2(m2);
+        setLength(length);
         setNotEQ(m1 !== null || m2 !== null);
 
         setIsLoading(false);
@@ -69,6 +70,7 @@ V -> 1 $ 1 | 0 V 0 | 1 V 1
   }, []);
 
   const [notEQ, setNotEQ] = useState(false);
+  const [length, setLength] = useState<number>(0);
   const [m1, setM1] = useState<string | null>(null);
   const [m2, setM2] = useState<string | null>(null);
 
@@ -175,7 +177,9 @@ V -> 1 $ 1 | 0 V 0 | 1 V 1
               )}
               {!notEQ && (
                 <div className="flex items-center space-x-2">
-                  <div className="grid flex-1 gap-2">I checked all strings of length upto 15 and couldn't find a difference :(</div>
+                  <div className="grid flex-1 gap-2">
+                    I checked all strings of length {"<"} {length} and couldn't find a difference :(
+                  </div>
                 </div>
               )}
             </>
