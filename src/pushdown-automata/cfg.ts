@@ -189,12 +189,14 @@ export class CFG {
 
     let P = new DefaultHashMap<string, HashSet<Rule>>(() => new HashSet(), O);
     for (;;) {
-      const entry = P.entries().find(([variable, rules]) => {
-        if (rules.size !== 1) return false;
+      const entry = P.entries()
+        .filter(([variable]) => variable !== S)
+        .find(([variable, rules]) => {
+          if (rules.size !== 1) return false;
 
-        const [rule] = rules;
-        return !this.isSelfRecursiveUnitRule(variable, rule);
-      });
+          const [rule] = rules;
+          return !this.isSelfRecursiveUnitRule(variable, rule);
+        });
 
       if (entry === undefined) break;
 
@@ -228,7 +230,7 @@ export class CFG {
     const P = new DefaultHashMap<string, HashSet<Rule>>(
       () => new HashSet(),
       O.entries()
-        .filter(([variable]) => !E.has(variable))
+        .filter(([variable]) => V.has(variable))
         .map(([variable, rules]) => [
           variable,
           new HashSet(
@@ -243,6 +245,50 @@ export class CFG {
     return new CFG(T, V, S, P);
   }
 
+  public eliminateNonSelfRecursiveVariables(): CFG {
+    const T = this.T;
+    const S = this.S;
+    const V = this.V;
+    const O = this.P;
+
+    let P = new DefaultHashMap<string, HashSet<Rule>>(() => new HashSet(), O);
+    for (;;) {
+      const entry = P.entries()
+        .filter(([variable]) => variable !== S)
+        .find(([variable, rules]) => rules.values().every((rule) => rule.every((sym) => sym !== variable)));
+      if (entry === undefined) break;
+
+      const [nonSelfRecursiveVariable, nonSelfRecursiveRules] = entry;
+
+      V.delete(nonSelfRecursiveVariable);
+      P.delete(nonSelfRecursiveVariable);
+
+      P = new DefaultHashMap<string, HashSet<Rule>>(
+        () => new HashSet(),
+        P.entries()
+          .filter(([variable]) => variable !== nonSelfRecursiveVariable)
+          .map(([variable, rules]) => [
+            variable,
+            new HashSet(
+              rules.values().flatMap((rule) => {
+                const positions = rule
+                  .map((sym, i) => [sym, i] as [string, number])
+                  .filter(([sym]) => sym === nonSelfRecursiveVariable)
+                  .map(([, i]) => i);
+                if (positions.length === 0) return [rule];
+
+                return product(...positions.map(() => nonSelfRecursiveRules))
+                  .map((subs) => new HashMap(positions.map((position, i) => [position, subs[i]])))
+                  .map((subs) => rule.flatMap((sym, i) => (sym === nonSelfRecursiveVariable ? subs.get(i)! : sym)));
+              })
+            ),
+          ])
+      );
+    }
+
+    return new CFG(T, V, S, P);
+  }
+
   public renameVariables(): CFG {
     const T = this.T;
     const U = this.V;
@@ -251,8 +297,20 @@ export class CFG {
 
     const M = new HashMap<string, string>();
 
+    const fv = (x: number) => {
+      let v = "";
+      for (;;) {
+        v += String.fromCharCode(65 + (x % 26));
+
+        x = Math.floor(x / 26);
+        if (x === 0) break;
+      }
+
+      return v;
+    };
+
     let id = 0;
-    for (const variable of U) M.set(variable, String.fromCharCode(65 + id++));
+    for (const variable of U) M.set(variable, fv(id++));
 
     const V = new HashSet(U.values().map((variable) => M.get(variable)!));
     const S = M.get(R)!;
@@ -278,8 +336,21 @@ export class CFG {
       .eliminateNullVariables()
       .simplifyPassive()
       .eliminateDelegatingVariables()
-      .eliminateSingleRuleVariables()
-      .renameVariables();
+      .eliminateSingleRuleVariables();
+  }
+
+  public augmentStart(S: string): CFG {
+    const T = this.T;
+    const U = this.V;
+    const R = this.S;
+    const O = this.P;
+
+    const V = new HashSet([S, ...U]);
+
+    const P = new DefaultHashMap<string, HashSet<Rule>>(() => new HashSet(), O);
+    P.set(S, new HashSet([[R]]));
+
+    return new CFG(T, V, S, P);
   }
 
   public eliminateEpsilonRules(): CFG {
@@ -415,7 +486,7 @@ export class CFG {
     const peeker = new DefaultHashMap<[number, string], HashSet<[number, string]>>(() => new HashSet());
     const popper = new DefaultHashMap<number, HashSet<[number, string, string]>>(() => new HashSet());
 
-    for (const [[cur, sym, pop], cs] of D.entries()) {
+    for (const [[cur, sym, pop], cs] of D) {
       for (const [nxt, push] of cs) {
         if (pop === EPSILON && push !== EPSILON) {
           peeker.get([nxt, push]).add([cur, sym]);
@@ -427,9 +498,9 @@ export class CFG {
       }
     }
 
-    for (const [[r, u], cs] of peeker.entries()) {
+    for (const [[r, u], cs] of peeker) {
       for (const [p, a] of cs) {
-        for (const [q, ds] of popper.entries()) {
+        for (const [q, ds] of popper) {
           for (const [s, b, v] of ds) {
             if (u !== v) continue;
 
@@ -452,38 +523,11 @@ export class CFG {
       P.get(fv(p, p)).add([EPSILON]);
     }
 
-    return new CFG(T, V, S, P).simplifyAggressive();
-  }
-
-  public toString(): string {
-    const V = this.V;
-    const S = this.S;
-    const P = this.P;
-
-    return [
-      ...new HashSet([S, ...V]).values().map(
-        (variable) =>
-          `${variable}\t-> ${[...P.get(variable)]
-            .toSorted()
-            .map((rule) => rule.join(" "))
-            .join(" | ")}`
-      ),
-    ].join("\n");
+    return new CFG(T, V, S, P).simplifyAggressive().eliminateNonSelfRecursiveVariables().simplifyPassive().renameVariables();
   }
 
   public toCNF(): CFG {
-    const T = this.T;
-    const U = this.V;
-    const R = this.S;
-    const O = this.P;
-
-    const S = "S0";
-    const V = new HashSet([S, ...U]);
-
-    const P = new DefaultHashMap<string, HashSet<Rule>>(() => new HashSet(), O);
-    P.set(S, new HashSet([[R]]));
-
-    return new CFG(T, V, S, P).simplifyPassive().eliminateEpsilonRules().eliminateUnitRules().toCNFForm();
+    return this.simplifyPassive().augmentStart("S0").eliminateEpsilonRules().eliminateUnitRules().toCNFForm();
   }
 
   private toCNFForm(): CFG {
@@ -496,7 +540,7 @@ export class CFG {
     let P = new DefaultHashMap<string, HashSet<Rule>>(() => new HashSet(), O);
 
     const cache = new HashMap<Rule, string>();
-    for (const [variable, rules] of P.entries()) {
+    for (const [variable, rules] of P) {
       if (rules.size !== 1) continue;
 
       const [rule] = rules;
@@ -583,5 +627,21 @@ export class CFG {
     }
 
     return new CFG(T, V, S, P);
+  }
+
+  public toString(): string {
+    const V = this.V;
+    const S = this.S;
+    const P = this.P;
+
+    return [
+      ...new HashSet([S, ...V]).values().map(
+        (variable) =>
+          `${variable}\t-> ${[...P.get(variable)]
+            .toSorted()
+            .map((rule) => rule.join(" "))
+            .join(" | ")}`
+      ),
+    ].join("\n");
   }
 }

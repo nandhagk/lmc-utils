@@ -8,12 +8,18 @@ export class Queue<T> {
   #tail: Node<T> | null = null;
   #size: number = 0;
 
+  public constructor(other?: Iterable<T>) {
+    if (other !== undefined) {
+      for (const item of other) this.push(item);
+    }
+  }
+
   public get size(): number {
     return this.#size;
   }
 
-  public push(x: T): void {
-    const node: Node<T> = { item: x, next: null };
+  public push(item: T): void {
+    const node: Node<T> = { item, next: null };
 
     if (this.#head !== null) {
       this.#tail = this.#tail!.next = node;
@@ -24,14 +30,18 @@ export class Queue<T> {
     ++this.#size;
   }
 
-  // UB if called on empty queue
-  public pop(): void {
-    --this.#size;
-    this.#head = this.#head!.next;
+  public pop(): T | undefined {
+    const item = this.peek();
+
+    if (this.#head !== null) {
+      this.#head = this.#head.next;
+      --this.#size;
+    }
+
+    return item;
   }
 
-  // UB if called on empty queue
-  public front(): T {
-    return this.#head!.item;
+  public peek(): T | undefined {
+    return this.#head?.item;
   }
 }

@@ -54,7 +54,7 @@ class NDFA {
         }
       }
 
-      for (const [k, s] of G.entries()) {
+      for (const [k, s] of G) {
         D.set(k, s);
         if (Q.has(s)) continue;
 

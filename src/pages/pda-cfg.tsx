@@ -25,16 +25,19 @@ export function PDACFG() {
     resolver: zodResolver(FormSchema),
     defaultValues: {
       start: "q1",
-      accept: "q4",
+      accept: "q4,q7",
       pda: `
 q1 q2 ~,~ -> $
-q2 q2 a,~ -> 2
-q2 q2 a,~ -> 3
+q2 q2 a,~ -> a
 q2 q3 ~,~ -> ~
-q3 q3 b,3 -> 2
-q3 q3 b,2 -> 1
-q3 q3 b,1 -> ~
+q3 q3 b,a -> ~
 q3 q4 ~,$ -> ~
+q4 q4 c,~ -> ~
+q2 q5 ~,~ -> ~
+q5 q5 b,~ -> ~
+q5 q6 ~,~ -> ~
+q6 q6 c,a -> ~
+q6 q7 ~,$ -> ~
       `.trim(),
     },
   });

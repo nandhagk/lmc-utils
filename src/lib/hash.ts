@@ -12,8 +12,6 @@ const RAND_BOL = rand64();
 const RAND_STR = rand64();
 const RAND_ARR = rand64();
 const RAND_OBJ = rand64();
-const RAND_HMP = rand64();
-const RAND_HST = rand64();
 
 export interface Hashable {
   hash(): Hash;
@@ -105,8 +103,8 @@ export class HashMap<K, V> implements Hashable {
     this.#vals.clear();
   }
 
-  public get(key: K): V | null {
-    return this.#vals.get(hash(key)) ?? null;
+  public get(key: K): V | undefined {
+    return this.#vals.get(hash(key));
   }
 
   public has(key: K): boolean {
@@ -142,8 +140,10 @@ export class HashMap<K, V> implements Hashable {
     return this.entries();
   }
 
+  static #RND = rand64();
+
   public hash(): Hash {
-    return [...this.#vals.entries()].toSorted().reduce((acc, cur) => hashCombine(acc, cur), RAND_HMP);
+    return [...this.#vals.entries()].toSorted().reduce((acc, cur) => hashCombine(acc, cur), HashMap.#RND);
   }
 }
 
@@ -260,8 +260,10 @@ export class HashSet<V> implements Hashable {
     return new HashSet([...s, ...t]);
   }
 
+  static #RND = rand64();
+
   public hash(): Hash {
-    return [...this.#vals.keys()].toSorted().reduce((acc, cur) => hashCombine(acc, cur), RAND_HST);
+    return [...this.#vals.keys()].toSorted().reduce((acc, cur) => hashCombine(acc, cur), HashSet.#RND);
   }
 }
 

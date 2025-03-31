@@ -34,7 +34,7 @@ export class PDA {
 
     D.set([S, EPSILON, EPSILON], new HashSet([[R, TOP]]));
 
-    for (const [[cur, sym, pop], states] of C.entries()) {
+    for (const [[cur, sym, pop], states] of C) {
       for (const [nxt, push] of states) {
         if (pop !== EPSILON && push !== EPSILON) {
           const mid = this.id++;

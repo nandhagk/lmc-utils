@@ -1,71 +1,61 @@
-import { DefaultHashMap, HashSet } from "@/lib/hash";
+import { Hash, Hashable, hashCombine, HashSet, rand64 } from "@/lib/hash";
 import { Queue } from "@/lib/queue";
 import { CFG, Rule } from "@/pushdown-automata/cfg";
 
-interface Item {
-  variable: string;
-  rule: Rule;
-  position: number;
-  pointer: number;
+export class Item implements Hashable {
+  public constructor(public V: string, public R: Rule, public P: number, public O: number) {}
+
+  static #RND = rand64();
+
+  public hash(): Hash {
+    return [this.V, this.R, this.P, this.O].reduce((acc, cur) => hashCombine(acc, cur), Item.#RND);
+  }
 }
 
 export class Recognizer {
   private cfg: CFG;
   private nullable: HashSet<string> = new HashSet();
 
+  private startItem: Item;
+  private stopItem: Item;
+
   public constructor(c: CFG) {
-    c = c.simplifyAggressive();
-
-    const T = c.T;
-    const U = c.V;
-    const R = c.S;
-    const O = c.P;
-
-    const S = "S`";
-
-    const V = new HashSet([S, ...U]);
-    const P = new DefaultHashMap<string, HashSet<Rule>>(() => new HashSet(), O);
-
-    P.set(S, new HashSet([[R]]));
-
-    this.cfg = new CFG(T, V, S, P);
+    this.cfg = c.simplifyAggressive().augmentStart("S`");
     this.nullable = this.cfg.findNullableVariables();
+
+    const [startRule] = this.cfg.P.get(this.cfg.S);
+
+    this.startItem = new Item(this.cfg.S, startRule, 0, 0);
+    this.stopItem = new Item(this.cfg.S, startRule, 1, 0);
   }
 
   public accepts(text: string): boolean {
     const sets = new Array(text.length + 1).fill(null).map(() => new HashSet<Item>());
-    const startRule = [...this.cfg.P.get(this.cfg.S)][0];
 
-    sets[0].add({ variable: this.cfg.S, rule: startRule, position: 0, pointer: 0 });
+    sets[0].add(this.startItem);
     for (let i = 0; i <= text.length; ++i) {
       const cur = sets[i];
 
-      const queue = new Queue<Item>();
-      for (const item of cur) queue.push(item);
-
+      const queue = new Queue<Item>(cur);
       while (queue.size > 0) {
-        const { variable, rule, position, pointer } = queue.front();
-        queue.pop();
+        const { V, R, P, O } = queue.pop()!;
 
         // Scanner
-        if (i < text.length && position < rule.length) {
+        if (i < text.length && P < R.length) {
           const nxt = sets[i + 1];
-          const a = rule[position];
 
+          const a = R[P];
           if (this.cfg.T.has(a) && a === text[i]) {
-            const item = { variable, rule, position: position + 1, pointer };
-            if (nxt.has(item)) continue;
-
-            nxt.add(item);
+            nxt.add(new Item(V, R, P + 1, O));
           }
         }
 
         // Predictor
-        if (position < rule.length) {
-          const B = rule[position];
+        if (P < R.length) {
+          const B = R[P];
           if (this.cfg.V.has(B)) {
             for (const r of this.cfg.P.get(B)) {
-              const item = { variable: B, rule: r, position: 0, pointer: i };
+              const item = new Item(B, r, 0, i);
               if (cur.has(item)) continue;
 
               cur.add(item);
@@ -73,7 +63,7 @@ export class Recognizer {
             }
 
             if (this.nullable.has(B)) {
-              const item = { variable, rule, position: position + 1, pointer };
+              const item = new Item(V, R, P + 1, O);
               if (cur.has(item)) continue;
 
               cur.add(item);
@@ -83,24 +73,23 @@ export class Recognizer {
         }
 
         // Completer
-        if (position === rule.length) {
-          for (const { variable: v, rule: r, position: p, pointer: ptr } of sets[pointer]) {
-            if (p < r.length) {
-              const A = r[p];
-              if (A === variable) {
-                const item = { variable: v, rule: r, position: p + 1, pointer: ptr };
-                if (cur.has(item)) continue;
+        if (P === R.length) {
+          for (const { V: U, R: S, P: Q, O: N } of sets[O]) {
+            if (Q === S.length) continue;
 
-                cur.add(item);
-                queue.push(item);
-              }
+            const A = S[Q];
+            if (A === V) {
+              const item = new Item(U, S, Q + 1, N);
+              if (cur.has(item)) continue;
+
+              cur.add(item);
+              queue.push(item);
             }
           }
         }
       }
     }
 
-    const item = { variable: this.cfg.S, rule: startRule, position: 1, pointer: 0 };
-    return sets[text.length].has(item);
+    return sets[text.length].has(this.stopItem);
   }
 }

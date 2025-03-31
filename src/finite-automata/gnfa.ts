@@ -29,8 +29,8 @@ export class GNFA {
     this.D.get(q)!.delete(q);
     this.E.get(q)!.delete(q);
 
-    for (const [incoming, a] of this.E.get(q)!.entries()) {
-      for (const [outgoing, b] of this.D.get(q)!.entries()) {
+    for (const [incoming, a] of this.E.get(q)!) {
+      for (const [outgoing, b] of this.D.get(q)!) {
         const c = self ? GNFA.concat(GNFA.concat(a, self), b) : GNFA.concat(a, b);
 
         if (this.D.get(incoming)!.has(outgoing)) {
