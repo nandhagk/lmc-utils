@@ -93,8 +93,8 @@ V -> 1 $ 1 | 0 V 0 | 1 V 1
               <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 md:p-8">
                 <div className="flex flex-col gap-6">
                   <div className="flex flex-col items-center text-center">
-                    <h1 className="text-2xl font-bold">CFG to CNF</h1>
-                    <p className="text-balance text-muted-foreground">Convert CFG to Chomsky Normal Form</p>
+                    <h1 className="text-2xl font-bold">CFG Equivalence</h1>
+                    <p className="text-balance text-muted-foreground">Check (in)equivalence of CFGs</p>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="alphabet">Alphabet</Label>
