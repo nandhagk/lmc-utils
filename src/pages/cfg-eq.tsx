@@ -22,9 +22,19 @@ export function CFGEq() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      alphabet: "a,b",
-      cfg1: "S -> A S A | a B\nA -> B | S\nB -> b | ~",
-      cfg2: "S -> A S A | a B\nA -> B | S\nB -> b | ~",
+      alphabet: "0,1,$",
+      cfg1: `
+A	-> 0 B 1 | 1 C 0
+B	-> 0 B 0 | 1 D 1
+C	-> $ 1 | 0 B 1 | 1 C 0
+D	-> $ | 0 B 0 | 1 D 1
+      `.trim(),
+      cfg2: `
+S -> T | U
+T -> 1 $ 1 0 | 1 T 0
+U -> 0 V 1 | 1 U 0
+V -> 1 $ 1 | 0 V 0 | 1 V 1
+      `.trim(),
     },
   });
 
