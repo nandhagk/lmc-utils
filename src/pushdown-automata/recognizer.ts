@@ -23,10 +23,10 @@ export class Recognizer {
     this.cfg = c.simplifyAggressive().augmentStart("S`");
     this.nullable = this.cfg.findNullableVariables();
 
-    const [startRule] = this.cfg.P.get(this.cfg.S);
+    const [rule] = this.cfg.P.get(this.cfg.S);
 
-    this.startItem = new Item(this.cfg.S, startRule, 0, 0);
-    this.stopItem = new Item(this.cfg.S, startRule, 1, 0);
+    this.startItem = new Item(this.cfg.S, rule, 0, 0);
+    this.stopItem = new Item(this.cfg.S, rule, 1, 0);
   }
 
   public accepts(text: string): boolean {

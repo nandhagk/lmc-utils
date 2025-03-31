@@ -7,6 +7,7 @@ import { NFARegex } from "@/pages/nfa-regex";
 import { PDACFG } from "@/pages/pda-cfg";
 import { RegexEq } from "@/pages/regex-eq";
 import { BrowserRouter, Route, Routes } from "react-router";
+import { CFGEq } from "./pages/cfg-eq";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/regex-eq" element={<RegexEq />} />
           <Route path="/nfa-regex" element={<NFARegex />} />
           <Route path="/cfg-cnf" element={<CFGCNF />} />
+          <Route path="/cfg-eq" element={<CFGEq />} />
           <Route path="/pda-cfg" element={<PDACFG />} />
           <Route path="/cfg-membership" element={<CFGMembership />} />
         </Route>

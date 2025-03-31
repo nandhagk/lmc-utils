@@ -265,12 +265,12 @@ export class CFG {
 
       P = new DefaultHashMap<string, HashSet<Rule>>(
         () => new HashSet(),
-        P.entries()
-          .filter(([variable]) => variable !== nonSelfRecursiveVariable)
-          .map(([variable, rules]) => [
-            variable,
-            new HashSet(
-              rules.values().flatMap((rule) => {
+        P.entries().map(([variable, rules]) => [
+          variable,
+          new HashSet(
+            rules
+              .values()
+              .flatMap((rule) => {
                 const positions = rule
                   .map((sym, i) => [sym, i] as [string, number])
                   .filter(([sym]) => sym === nonSelfRecursiveVariable)
@@ -279,10 +279,11 @@ export class CFG {
 
                 return product(...positions.map(() => nonSelfRecursiveRules))
                   .map((subs) => new HashMap(positions.map((position, i) => [position, subs[i]])))
-                  .map((subs) => rule.flatMap((sym, i) => (sym === nonSelfRecursiveVariable ? subs.get(i)! : sym)));
+                  .map((subs) => rule.flatMap((sym, i) => (sym === nonSelfRecursiveVariable ? subs.get(i)! : sym)) as Rule);
               })
-            ),
-          ])
+              .map((rule) => (this.isEpsilonRule(rule) ? rule : rule.filter((sym) => sym !== EPSILON)))
+          ),
+        ])
       );
     }
 
@@ -504,12 +505,7 @@ export class CFG {
           for (const [s, b, v] of ds) {
             if (u !== v) continue;
 
-            const rule = [];
-            if (a !== EPSILON) rule.push(a);
-            rule.push(fv(r, s));
-            if (b !== EPSILON) rule.push(b);
-
-            P.get(fv(p, q)).add(rule);
+            P.get(fv(p, q)).add([a, fv(r, s), b].filter((sym) => sym !== EPSILON));
           }
         }
       }

@@ -4,65 +4,51 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { GraphCanvas } from "@/components/graph/graph-canvas";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 
 const FormSchema = z.object({
-  start: z.string(),
-  accept: z.string(),
-  pda: z.string(),
+  alphabet: z.string(),
+  cfg1: z.string(),
+  cfg2: z.string(),
 });
 
-export function PDACFG() {
+export function CFGEq() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      start: "q1",
-      accept: "q7",
-      pda: `
-q1 q2 ~,~ -> #
-q2 q3 0,~ -> 1
-q3 q3 0,~ -> 0
-q3 q4 1,~ -> 1
-q4 q4 1,~ -> 1
-q4 q3 0,~ -> 0
-q2 q5 1,~ -> 0
-q5 q5 1,~ -> 0
-q5 q3 0,~ -> 1
-q4 q6 $,~ -> ~
-q5 q6 $,~ -> 1
-q6 q6 0,0 -> ~
-q6 q6 1,1 -> ~
-q6 q7 ~,# -> ~
-      `.trim(),
+      alphabet: "a,b",
+      cfg1: "S -> A S A | a B\nA -> B | S\nB -> b | ~",
+      cfg2: "S -> A S A | a B\nA -> B | S\nB -> b | ~",
     },
   });
 
-  const graph = form.watch("pda");
-  const selected = form.watch("accept");
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [worker, setWorker] = useState<Worker | null>(null);
 
   useEffect(() => {
-    const worker = new Worker(new URL("@/workers/pda-cfg.ts", import.meta.url));
+    const worker = new Worker(new URL("@/workers/cfg-eq.ts", import.meta.url));
 
-    worker.onmessage = (e: MessageEvent<{ success: boolean; cfg: string }>) => {
+    worker.onmessage = (e: MessageEvent<{ success: boolean; m1: string | null; m2: string | null }>) => {
       const { success } = e.data;
 
       if (!success) {
         setIsOpen(false);
         toast.error("Parse failure!", { richColors: true });
       } else {
-        const { cfg } = e.data;
+        const { m1, m2 } = e.data;
 
-        setCFG(cfg);
+        setM1(m1);
+        setM2(m2);
+        setNotEQ(m1 !== null || m2 !== null);
+
         setIsLoading(false);
       }
     };
@@ -72,9 +58,9 @@ q6 q7 ~,# -> ~
     return () => worker.terminate();
   }, []);
 
-  const [cfg, setCFG] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [notEQ, setNotEQ] = useState(false);
+  const [m1, setM1] = useState<string | null>(null);
+  const [m2, setM2] = useState<string | null>(null);
 
   const onSubmit = (data: z.infer<typeof FormSchema>) => {
     setIsLoading(true);
@@ -97,78 +83,92 @@ q6 q7 ~,# -> ~
               <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 md:p-8">
                 <div className="flex flex-col gap-6">
                   <div className="flex flex-col items-center text-center">
-                    <h1 className="text-2xl font-bold">PDA to CFG</h1>
-                    <p className="text-balance text-muted-foreground">Find CFG accepted by PDA</p>
+                    <h1 className="text-2xl font-bold">CFG to CNF</h1>
+                    <p className="text-balance text-muted-foreground">Convert CFG to Chomsky Normal Form</p>
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="start">Start</Label>
+                    <Label htmlFor="alphabet">Alphabet</Label>
                     <FormField
                       control={form.control}
-                      name="start"
+                      name="alphabet"
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input id="start" className="font-mono" placeholder="Start" {...field} />
+                            <Input id="alphabet" className="font-mono" placeholder="Alphabet" {...field} />
                           </FormControl>
                         </FormItem>
                       )}
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="accept">Accept</Label>
+                    <Label htmlFor="cfg1">CFG 1</Label>
                     <FormField
                       control={form.control}
-                      name="accept"
+                      name="cfg1"
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input id="accept" className="font-mono" placeholder="Accept" {...field} />
+                            <Textarea id="cfg1" placeholder="CFG 1" {...field} className="min-h-36 font-mono" />
                           </FormControl>
                         </FormItem>
                       )}
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="pda">PDA</Label>
+                    <Label htmlFor="cfg2">CFG 2</Label>
                     <FormField
                       control={form.control}
-                      name="pda"
+                      name="cfg2"
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <ScrollArea type="auto" className="max-h-60">
-                              <Textarea id="pda" placeholder="PDA" {...field} className="min-h-60 font-mono" />
-                            </ScrollArea>
+                            <Textarea id="cfg2" placeholder="CFG 2" {...field} className="min-h-36 font-mono" />
                           </FormControl>
                         </FormItem>
                       )}
                     />
                   </div>
-
                   <Button type="submit" className="cursor-pointer w-full">
-                    Find
+                    Check
                   </Button>
                 </div>
               </form>
             </Form>
           </div>
         </div>
-        <GraphCanvas graph={graph} selected={selected.split(",").map((s) => s.trim())}></GraphCanvas>
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{isLoading ? "Processing" : "CFG"}</DialogTitle>
+            <DialogTitle>{isLoading ? "Processing" : notEQ ? "Not Equivalent" : "Undecided"}</DialogTitle>
           </DialogHeader>
           {isLoading ? (
             <Spinner />
           ) : (
-            <div className="flex items-center space-x-2">
-              <div className="grid flex-1 gap-2">
-                <pre className="text-wrap break-all font-mono md:text-sm">{cfg}</pre>
-              </div>
-            </div>
+            <>
+              {m1 !== null && (
+                <div className="flex items-center space-x-2">
+                  <div className="grid flex-1 gap-2">
+                    <Label htmlFor="m1">Matched by 1 but not by 2</Label>
+                    <pre className="text-wrap font-mono md:text-sm">{m1 === "" ? "[empty-string]" : m1}</pre>
+                  </div>
+                </div>
+              )}
+              {m2 !== null && (
+                <div className="flex items-center space-x-2">
+                  <div className="grid flex-1 gap-2">
+                    <Label htmlFor="m2">Matched by 2 but not by 1</Label>
+                    <pre className="text-wrap font-mono md:text-sm">{m2 === "" ? "[empty-string]" : m2}</pre>
+                  </div>
+                </div>
+              )}
+              {!notEQ && (
+                <div className="flex items-center space-x-2">
+                  <div className="grid flex-1 gap-2">I checked all strings of length upto 15 and couldn't find a difference :(</div>
+                </div>
+              )}
+            </>
           )}
         </DialogContent>
       </Dialog>

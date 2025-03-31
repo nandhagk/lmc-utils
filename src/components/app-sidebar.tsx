@@ -35,6 +35,10 @@ const data = [
     title: "Pushdown Automata",
     items: [
       {
+        title: "CFG Equivalence",
+        url: "/cfg-eq",
+      },
+      {
         title: "CFG to CNF",
         url: "/cfg-cnf",
       },
