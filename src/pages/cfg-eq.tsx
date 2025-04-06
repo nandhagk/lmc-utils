@@ -24,10 +24,10 @@ export function CFGEq() {
     defaultValues: {
       alphabet: "0,1,$",
       cfg1: `
-A	-> 0 B 1 | 1 C 0
-B	-> 0 B 0 | 1 D 1
-C	-> $ 1 | 0 B 1 | 1 C 0
-D	-> $ | 0 B 0 | 1 D 1
+A -> 0 B 1 | 1 C 0
+B -> 0 B 0 | 1 D 1
+C -> $ 1 | 0 B 1 | 1 C 0
+D -> $ | 0 B 0 | 1 D 1
       `.trim(),
       cfg2: `
 S -> T | U
