@@ -1,50 +1,26 @@
-# React + TypeScript + Vite
+# LMC Utils
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Utilities to reason about automata and formal languages. Most algorithms implemented, are realizations of same mentioned in the textbook.
 
-Currently, two official plugins are available:
+## Utilities offered
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Finite automata
 
-## Expanding the ESLint configuration
+- Conversion from NFA to equivalent regular expression.
+- Checking equivalence of regular expressions.
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+### Pushdown automata
 
-- Configure the top-level `parserOptions` property like this:
+- Normalizing CFG to equivalent CNF.
+- Checking membership of string in CFG.
+- Conversion from PDA to equivalent CFG.
+- Checking (in)equivalence of CFG.
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+## Sources
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+- Introduction to the Theory of Computation 3rd Ed. (Michael Sipser)
+- [Detecting and explaining (in)equivalence of context-free grammars](https://arxiv.org/pdf/2407.18220)
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+#### (PS) Who are the people in the homepage?
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+Some of my friends who provided valuable feedback to improve user experience.
