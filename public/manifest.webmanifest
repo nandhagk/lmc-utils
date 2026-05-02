@@ -1,0 +1,13 @@
+{
+  "name": "LMC Utils — Automata & Formal Languages Toolkit",
+  "short_name": "LMC Utils",
+  "description": "Browser-based utilities for automata and formal languages: NFA to regex, regex equivalence, CFG to CNF, CFG membership, PDA to CFG, CFG (in)equivalence.",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#0a0a0a",
+  "background_color": "#0a0a0a",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

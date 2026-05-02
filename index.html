@@ -1,16 +1,85 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LMC Utils</title>
+
+    <title>LMC Utils — Automata & Formal Languages Toolkit</title>
+    <meta name="description" content="Online utilities for automata and formal languages: convert NFAs to regular expressions, check regex equivalence, normalize CFGs to CNF, test CFG membership, convert PDAs to CFGs, and check CFG (in)equivalence." />
+    <meta name="keywords" content="automata, formal languages, theory of computation, NFA, DFA, regular expression, regex equivalence, CFG, context-free grammar, CNF, Chomsky normal form, PDA, pushdown automaton, CFG membership, CFG equivalence, Sipser" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="google-site-verification" content="zROlXSKKnISmfSx6Bfba-T5vapkU358MTw690WenwQ8" />
+    <link rel="canonical" href="https://lmc-utils.web.app/" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Open Graph (Discord, WhatsApp, Facebook, LinkedIn, Slack) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="LMC Utils" />
+    <meta property="og:url" content="https://lmc-utils.web.app/" />
+    <meta property="og:title" content="LMC Utils — Automata & Formal Languages Toolkit" />
+    <meta property="og:description" content="Online utilities for automata and formal languages: NFA to regex, regex equivalence, CFG to CNF, CFG membership, PDA to CFG, and CFG (in)equivalence." />
+    <meta property="og:image" content="https://lmc-utils.web.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="LMC Utils — automata and formal languages toolkit" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="LMC Utils — Automata & Formal Languages Toolkit" />
+    <meta name="twitter:description" content="Online utilities for automata and formal languages: NFA to regex, regex equivalence, CFG to CNF, CFG membership, PDA to CFG, and CFG (in)equivalence." />
+    <meta name="twitter:image" content="https://lmc-utils.web.app/og-image.png" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "LMC Utils",
+      "url": "https://lmc-utils.web.app/",
+      "description": "Online utilities for reasoning about automata and formal languages, including NFA-to-regex conversion, regex equivalence, CFG normalization to CNF, CFG membership, PDA-to-CFG conversion, and CFG (in)equivalence.",
+      "applicationCategory": "EducationalApplication",
+      "applicationSubCategory": "Theory of Computation",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet" />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main style="max-width: 760px; margin: 4rem auto; padding: 0 1.5rem; font-family: system-ui, -apple-system, sans-serif; color: #222; line-height: 1.55;">
+        <h1>LMC Utils</h1>
+        <p>
+          <strong>LMC Utils</strong> is a browser-based toolkit for reasoning about
+          automata and formal languages. The algorithms implemented here follow the
+          textbook treatment in <em>Introduction to the Theory of Computation</em> by
+          Michael Sipser.
+        </p>
+        <h2>Finite automata</h2>
+        <ul>
+          <li>Convert an NFA to an equivalent regular expression.</li>
+          <li>Check equivalence of two regular expressions.</li>
+        </ul>
+        <h2>Pushdown automata</h2>
+        <ul>
+          <li>Normalize a context-free grammar to Chomsky normal form (CNF).</li>
+          <li>Check membership of a string in a CFG.</li>
+          <li>Convert a PDA to an equivalent CFG.</li>
+          <li>Check (in)equivalence of two CFGs.</li>
+        </ul>
+        <p><em>Loading the interactive LMC Utils app&hellip;</em></p>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
